@@ -11,7 +11,7 @@ function falar(texto) {
   window.speechSynthesis.speak(u)
 }
 
-function ConteudoParte({ parte, audiencia }) {
+export function ConteudoParte({ parte, audiencia, ocultarFrasesInline = false }) {
   const [mostrarFrases, setMostrarFrases] = useState(audiencia === 'aluno')
 
   return (
@@ -36,17 +36,17 @@ function ConteudoParte({ parte, audiencia }) {
         </div>
       )}
 
-      {parte.frases_repetir?.length > 0 && (
+      {!ocultarFrasesInline && parte.frases_repetir?.length > 0 && (
         <div className="mb-3">
           {audiencia === 'professor' ? (
             <button onClick={() => setMostrarFrases((v) => !v)}
               className="flex items-center gap-1.5 text-xs font-semibold text-teal bg-teal-soft px-3 py-2 rounded-lg mb-2 transition">
-              <Repeat size={13} /> Frases para repetir
+              <Repeat size={13} /> Practice on Your Own
               {mostrarFrases ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
           ) : (
             <p className="flex items-center gap-1.5 text-[11px] font-semibold text-teal uppercase tracking-wide mb-2">
-              <Repeat size={12} /> Frases para repetir
+              <Repeat size={12} /> Practice on Your Own
             </p>
           )}
           {mostrarFrases && (
@@ -65,7 +65,7 @@ function ConteudoParte({ parte, audiencia }) {
 
       {audiencia === 'professor' && parte.perguntas_pratica?.length > 0 && (
         <div className="mb-3 space-y-1">
-          <p className="text-[11px] font-semibold text-ink-soft uppercase tracking-wide">Perguntas de prática</p>
+          <p className="text-[11px] font-semibold text-ink-soft uppercase tracking-wide">Practice Questions</p>
           {parte.perguntas_pratica.map((p) => (
             <p key={p.id} className="text-sm text-ink bg-paper rounded px-2.5 py-1.5">{p.texto}</p>
           ))}
@@ -128,7 +128,7 @@ export function LeitorMaterial({ nivel, licao, audiencia = 'aluno' }) {
   })
 
   if (!material || blocos.length === 0) {
-    return <EstadoVazio icone={BookOpenText} titulo="Nada publicado ainda" descricao="Assim que o material dessa lição for criado, ele aparece aqui." />
+    return <EstadoVazio icone={BookOpenText} titulo="Nothing published yet" descricao="As soon as this lesson's material is created, it will show up here." />
   }
 
   return (
@@ -138,9 +138,11 @@ export function LeitorMaterial({ nivel, licao, audiencia = 'aluno' }) {
 
         {blocos.map((bloco) => (
           <section key={bloco.id}>
-            <h2 className="font-display text-sm font-semibold text-navy uppercase tracking-wide mb-3 pb-2 border-b border-line">
-              {bloco.titulo}
-            </h2>
+            {bloco.tipo !== 'vocabulario' && (
+              <h2 className="font-display text-sm font-semibold text-navy uppercase tracking-wide mb-3 pb-2 border-b border-line">
+                {bloco.titulo}
+              </h2>
+            )}
 
             {bloco.tipo === 'vocabulario' && bloco.partes?.length > 0 ? (
               <BlocoVocabularioAbas partes={bloco.partes} audiencia={audiencia} />

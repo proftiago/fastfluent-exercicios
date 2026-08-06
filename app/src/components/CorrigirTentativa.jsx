@@ -19,7 +19,7 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
     e.preventDefault()
     setErro('')
     if (nota === '' || isNaN(Number(nota))) {
-      setErro('Informe uma nota válida.')
+      setErro('Please enter a valid grade.')
       return
     }
     setSalvando(true)
@@ -32,7 +32,7 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
       .eq('id', tentativa.id)
 
     setSalvando(false)
-    if (error) { setErro(`Erro ao salvar: ${error.message}`); return }
+    if (error) { setErro(`Error saving: ${error.message}`); return }
 
     fetch('https://kockwinynfpaenxmzagu.supabase.co/functions/v1/notificar-aluno', {
       method: 'POST',
@@ -53,7 +53,7 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
 
       <div className="space-y-3">
         {itensBase.map((item, i) => {
-          const respostaAluno = tentativa.resposta?.itens?.find((x) => x.id === item.id)?.texto || '(sem resposta)'
+          const respostaAluno = tentativa.resposta?.itens?.find((x) => x.id === item.id)?.texto || '(no answer)'
           return (
             <div key={item.id} className="border border-line rounded-lg p-3 space-y-2">
               <p className="text-xs font-medium text-ink-soft">
@@ -63,7 +63,7 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
               <input
                 value={comentarios[item.id]}
                 onChange={(e) => setComentarios((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                placeholder="Comentário nesse item (opcional)"
+                placeholder="Comment on this item (optional)"
                 className="w-full border border-line rounded-lg px-2.5 py-1.5 text-xs text-teal bg-teal-soft/40 focus:outline-none focus:ring-2 focus:ring-teal/40"
               />
             </div>
@@ -72,13 +72,13 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-soft mb-1.5 uppercase tracking-wide">Nota (0-10)</label>
+        <label className="block text-xs font-medium text-ink-soft mb-1.5 uppercase tracking-wide">Grade (0-10)</label>
         <input type="number" min="0" max="10" step="0.5" value={nota} onChange={(e) => setNota(e.target.value)}
           className="w-32 border border-line rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber" />
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-ink-soft mb-1.5 uppercase tracking-wide">Feedback geral pro aluno</label>
+        <label className="block text-xs font-medium text-ink-soft mb-1.5 uppercase tracking-wide">General feedback for the student</label>
         <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)} rows={3}
           className="w-full border border-line rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber" />
       </div>
@@ -87,9 +87,9 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
 
       <div className="flex gap-2">
         <button type="submit" disabled={salvando} className="pressionavel bg-navy text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-navy-deep disabled:opacity-50 transition">
-          {salvando ? 'Salvando...' : 'Salvar correção'}
+          {salvando ? 'Saving...' : 'Save Grading'}
         </button>
-        <button type="button" onClick={onCancelar} className="text-sm text-ink-soft px-3">Cancelar</button>
+        <button type="button" onClick={onCancelar} className="text-sm text-ink-soft px-3">Cancel</button>
       </div>
     </form>
   )

@@ -22,11 +22,11 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
     setMensagemSenha(null)
 
     if (novaSenha.length < 6) {
-      setMensagemSenha({ tipo: 'erro', texto: 'A nova senha precisa ter pelo menos 6 caracteres.' })
+      setMensagemSenha({ tipo: 'erro', texto: 'The new password needs at least 6 characters.' })
       return
     }
     if (novaSenha !== confirmarSenha) {
-      setMensagemSenha({ tipo: 'erro', texto: 'As senhas não coincidem.' })
+      setMensagemSenha({ tipo: 'erro', texto: "Passwords don't match." })
       return
     }
 
@@ -39,7 +39,7 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
 
     if (erroVerificacao) {
       setSalvandoSenha(false)
-      setMensagemSenha({ tipo: 'erro', texto: 'Senha atual incorreta.' })
+      setMensagemSenha({ tipo: 'erro', texto: 'Current password is incorrect.' })
       return
     }
 
@@ -47,11 +47,11 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
     setSalvandoSenha(false)
 
     if (error) {
-      setMensagemSenha({ tipo: 'erro', texto: `Erro ao trocar senha: ${error.message}` })
+      setMensagemSenha({ tipo: 'erro', texto: `Error changing password: ${error.message}` })
       return
     }
 
-    setMensagemSenha({ tipo: 'sucesso', texto: 'Senha alterada com sucesso.' })
+    setMensagemSenha({ tipo: 'sucesso', texto: 'Password changed successfully.' })
     setSenhaAtual(''); setNovaSenha(''); setConfirmarSenha('')
   }
 
@@ -60,11 +60,11 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
     if (!arquivo) return
 
     if (!arquivo.type.startsWith('image/')) {
-      setMensagemFoto({ tipo: 'erro', texto: 'Escolha um arquivo de imagem.' })
+      setMensagemFoto({ tipo: 'erro', texto: 'Please choose an image file.' })
       return
     }
     if (arquivo.size > 3 * 1024 * 1024) {
-      setMensagemFoto({ tipo: 'erro', texto: 'Imagem muito grande (máx 3MB).' })
+      setMensagemFoto({ tipo: 'erro', texto: 'Image too large (max 3MB).' })
       return
     }
 
@@ -80,7 +80,7 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
 
     if (erroUpload) {
       setEnviandoFoto(false)
-      setMensagemFoto({ tipo: 'erro', texto: `Erro ao enviar: ${erroUpload.message}` })
+      setMensagemFoto({ tipo: 'erro', texto: `Error uploading: ${erroUpload.message}` })
       return
     }
 
@@ -95,22 +95,22 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
     setEnviandoFoto(false)
 
     if (erroSalvar) {
-      setMensagemFoto({ tipo: 'erro', texto: `Erro ao salvar: ${erroSalvar.message}` })
+      setMensagemFoto({ tipo: 'erro', texto: `Error saving: ${erroSalvar.message}` })
       return
     }
 
-    setMensagemFoto({ tipo: 'sucesso', texto: 'Foto atualizada.' })
+    setMensagemFoto({ tipo: 'sucesso', texto: 'Photo updated.' })
     onAvatarAtualizado?.(urlComVersao)
   }
 
   return (
     <div className="space-y-6 max-w-md">
       <div className="bg-surface rounded-2xl border border-line p-6">
-        <h2 className="font-display text-base font-semibold text-ink mb-4">Foto de perfil</h2>
+        <h2 className="font-display text-base font-semibold text-ink mb-4">Profile Photo</h2>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-paper border border-line overflow-hidden flex items-center justify-center shrink-0">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="Sua foto" className="w-full h-full object-cover" />
+              <img src={avatarUrl} alt="Your photo" className="w-full h-full object-cover" />
             ) : (
               <Camera size={20} className="text-ink-faint" />
             )}
@@ -118,7 +118,7 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
           <label className="cursor-pointer">
             <span className="inline-flex items-center gap-2 text-sm font-medium text-navy bg-paper hover:bg-line px-3.5 py-2 rounded-lg transition">
               {enviandoFoto ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
-              {enviandoFoto ? 'Enviando...' : 'Escolher foto'}
+              {enviandoFoto ? 'Uploading...' : 'Choose Photo'}
             </span>
             <input type="file" accept="image/*" className="hidden" onChange={enviarFoto} disabled={enviandoFoto} />
           </label>
@@ -131,7 +131,7 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
       </div>
 
       <div className="bg-surface rounded-2xl border border-line p-6">
-        <h2 className="font-display text-base font-semibold text-ink mb-4">Aparência</h2>
+        <h2 className="font-display text-base font-semibold text-ink mb-4">Appearance</h2>
         <div className="flex gap-2">
           <button
             onClick={() => tema !== 'claro' && alternar()}
@@ -139,7 +139,7 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
               tema === 'claro' ? 'border-navy bg-navy text-white' : 'border-line text-ink-soft hover:border-navy/30'
             }`}
           >
-            <Sun size={15} /> Claro
+            <Sun size={15} /> Light
           </button>
           <button
             onClick={() => tema !== 'escuro' && alternar()}
@@ -147,25 +147,25 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
               tema === 'escuro' ? 'border-navy bg-navy text-white' : 'border-line text-ink-soft hover:border-navy/30'
             }`}
           >
-            <Moon size={15} /> Escuro
+            <Moon size={15} /> Dark
           </button>
         </div>
       </div>
 
       <form onSubmit={trocarSenha} className="bg-surface rounded-2xl border border-line p-6 space-y-3">
-        <h2 className="font-display text-base font-semibold text-ink mb-1">Trocar senha</h2>
+        <h2 className="font-display text-base font-semibold text-ink mb-1">Change Password</h2>
         <div>
-          <label className="block text-xs font-medium text-ink-soft mb-1 uppercase tracking-wide">Senha atual</label>
+          <label className="block text-xs font-medium text-ink-soft mb-1 uppercase tracking-wide">Current Password</label>
           <input type="password" required value={senhaAtual} onChange={(e) => setSenhaAtual(e.target.value)}
             className="w-full border border-line rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-ink-soft mb-1 uppercase tracking-wide">Nova senha</label>
+          <label className="block text-xs font-medium text-ink-soft mb-1 uppercase tracking-wide">New Password</label>
           <input type="password" required value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)}
             className="w-full border border-line rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-ink-soft mb-1 uppercase tracking-wide">Confirmar nova senha</label>
+          <label className="block text-xs font-medium text-ink-soft mb-1 uppercase tracking-wide">Confirm New Password</label>
           <input type="password" required value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)}
             className="w-full border border-line rounded-lg px-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber" />
         </div>
@@ -175,7 +175,7 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
           </p>
         )}
         <button type="submit" disabled={salvandoSenha} className="bg-navy text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-navy-deep disabled:opacity-50 transition">
-          {salvandoSenha ? 'Salvando...' : 'Trocar senha'}
+          {salvandoSenha ? 'Saving...' : 'Change Password'}
         </button>
       </form>
     </div>

@@ -65,8 +65,8 @@ export function AreaProfessor() {
     }
   }
 
-  const titulos = { conteudo: 'Conteúdo de aula', turmas: 'Minhas turmas', config: 'Configurações' }
-  const titulo = tela === null ? 'Início' : titulos[tela]
+  const titulos = { conteudo: 'Class Content', turmas: 'My Classes', config: 'Settings' }
+  const titulo = tela === null ? 'Home' : titulos[tela]
 
   return (
     <div className="min-h-screen bg-paper">
@@ -92,12 +92,12 @@ export function AreaProfessor() {
         {mostrarNotificacoes && (
           <div className="absolute right-4 top-16 w-80 max-w-[90vw] bg-surface rounded-2xl shadow-card border border-line z-20 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-              <p className="text-sm font-semibold text-ink">Atualizações</p>
+              <p className="text-sm font-semibold text-ink">Updates</p>
               <button onClick={() => setMostrarNotificacoes(false)} className="text-ink-soft hover:text-ink"><X size={16} /></button>
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notificacoes.length === 0 && (
-                <p className="text-sm text-ink-soft px-4 py-6 text-center">Nenhuma atualização ainda.</p>
+                <p className="text-sm text-ink-soft px-4 py-6 text-center">No updates yet.</p>
               )}
               {notificacoes.map((n) => (
                 <div key={n.id} className="px-4 py-3 border-b border-line last:border-b-0">
@@ -115,7 +115,7 @@ export function AreaProfessor() {
 
         {!carregando && !professorId && (
           <div className="border border-dashed border-line rounded-2xl px-6 py-10 text-center">
-            <p className="text-sm text-ink-soft">Sua conta não está vinculada a um cadastro de professor. Fale com a coordenação.</p>
+            <p className="text-sm text-ink-soft">Your account isn't linked to a teacher record. Please contact the coordination team.</p>
           </div>
         )}
 
@@ -128,18 +128,18 @@ export function AreaProfessor() {
                 </div>
                 <div>
                   <p className="font-mono text-amber text-[10px] tracking-[0.2em] uppercase mb-0.5">Fast Fluent</p>
-                  <h2 className="font-display text-xl font-bold text-white">Olá, {nome || 'professor'}!</h2>
+                  <h2 className="font-display text-xl font-bold text-white">Hi, {nome || 'teacher'}!</h2>
                 </div>
               </div>
-              <p className="text-sm text-white/70 mt-3 mb-4">Escolha o que você precisa agora.</p>
+              <p className="text-sm text-white/70 mt-3 mb-4">Choose what you need right now.</p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-white/[0.06] rounded-2xl px-4 py-3">
                   <p className="text-lg font-bold text-white">{stats.turmas}</p>
-                  <p className="text-[11px] text-white/50">{stats.turmas === 1 ? 'turma' : 'turmas'}</p>
+                  <p className="text-[11px] text-white/50">{stats.turmas === 1 ? 'class' : 'classes'}</p>
                 </div>
                 <div className="bg-white/[0.06] rounded-2xl px-4 py-3">
                   <p className="text-lg font-bold text-amber">{stats.pendentes}</p>
-                  <p className="text-[11px] text-white/50">pra corrigir</p>
+                  <p className="text-[11px] text-white/50">to grade</p>
                 </div>
               </div>
             </div>
@@ -150,8 +150,8 @@ export function AreaProfessor() {
                 <BookOpenText size={20} className="text-amber" />
               </div>
               <div>
-                <p className="font-display text-base font-semibold text-ink">Conteúdo de aula</p>
-                <p className="text-xs text-ink-soft mt-0.5">Todos os materiais, por livro e lição</p>
+                <p className="font-display text-base font-semibold text-ink">Class Content</p>
+                <p className="text-xs text-ink-soft mt-0.5">All materials, by book and lesson</p>
               </div>
             </button>
 
@@ -161,8 +161,8 @@ export function AreaProfessor() {
                 <Users size={20} className="text-teal" />
               </div>
               <div>
-                <p className="font-display text-base font-semibold text-ink">Minhas turmas</p>
-                <p className="text-xs text-ink-soft mt-0.5">Corrigir dever de casa e ver progresso</p>
+                <p className="font-display text-base font-semibold text-ink">My Classes</p>
+                <p className="text-xs text-ink-soft mt-0.5">Grade homework and check progress</p>
               </div>
             </button>
 
@@ -172,8 +172,8 @@ export function AreaProfessor() {
                 <Settings size={20} className="text-navy" />
               </div>
               <div>
-                <p className="font-display text-base font-semibold text-ink">Configurações</p>
-                <p className="text-xs text-ink-soft mt-0.5">Foto, tema e senha</p>
+                <p className="font-display text-base font-semibold text-ink">Settings</p>
+                <p className="text-xs text-ink-soft mt-0.5">Photo, theme and password</p>
               </div>
             </button>
           </div>
@@ -182,7 +182,7 @@ export function AreaProfessor() {
         {!carregando && professorId && tela !== null && (
           <div className="animar-entrada" key={tela}>
             <button onClick={() => setTela(null)} className="flex items-center gap-1 text-sm text-ink-soft hover:text-ink mb-4 transition">
-              <ChevronLeft size={16} /> Início
+              <ChevronLeft size={16} /> Home
             </button>
             {tela === 'conteudo' && <ConteudoProfessor />}
             {tela === 'turmas' && <MinhasTurmas professorId={professorId} />}

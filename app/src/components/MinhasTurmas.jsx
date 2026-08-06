@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { CorrigirTentativa } from './CorrigirTentativa'
-import { LeitorMaterial } from './LeitorMaterial'
+import { MenuSecoesLicao } from './MenuSecoesLicao'
 import { Carregando } from './Carregando'
 import { EstadoVazio } from './EstadoVazio'
 import { Clock, CheckCircle2, Users, BookOpenText, ListChecks } from 'lucide-react'
@@ -15,6 +15,7 @@ export function MinhasTurmas({ professorId }) {
   const [tentativaAberta, setTentativaAberta] = useState(null)
   const [carregando, setCarregando] = useState(true)
   const [abaTurma, setAbaTurma] = useState('correcao') // 'correcao' | 'material'
+  const [secaoMaterial, setSecaoMaterial] = useState(null)
 
   useEffect(() => {
     supabase.from('turmas').select('id, nome, nivel').eq('professor_id', professorId).then(({ data }) => {
@@ -27,6 +28,7 @@ export function MinhasTurmas({ professorId }) {
     setTurmaSel(turma)
     setTentativaAberta(null)
     setAbaTurma('correcao')
+    setSecaoMaterial(null)
 
     const { data: prog } = await supabase.from('turma_progresso').select('licao_atual').eq('turma_id', turma.id).maybeSingle()
     setProgresso(prog)
@@ -47,7 +49,7 @@ export function MinhasTurmas({ professorId }) {
   if (carregando) return <Carregando />
 
   if (turmas.length === 0) {
-    return <EstadoVazio icone={Users} titulo="Nenhuma turma ainda" descricao="Assim que uma turma for vinculada a você, ela aparece aqui." />
+    return <EstadoVazio icone={Users} titulo="No classes yet" descricao="As soon as a class is linked to you, it will show up here." />
   }
 
   if (!turmaSel) {
@@ -80,7 +82,7 @@ export function MinhasTurmas({ professorId }) {
 
   return (
     <div className="space-y-6">
-      <button onClick={() => setTurmaSel(null)} className="text-sm text-ink-soft hover:text-ink transition">← Turmas</button>
+      <button onClick={() => setTurmaSel(null)} className="text-sm text-ink-soft hover:text-ink transition">← Classes</button>
       <h2 className="font-display text-lg font-semibold text-ink">{turmaSel.nome}</h2>
 
       <div className="inline-flex bg-paper border border-line rounded-full p-1">
@@ -89,28 +91,28 @@ export function MinhasTurmas({ professorId }) {
           className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition ${
             abaTurma === 'correcao' ? 'bg-navy text-white shadow-sm' : 'text-ink-soft hover:text-ink'
           }`}>
-          <ListChecks size={15} /> Correção
+          <ListChecks size={15} /> Grading
         </button>
         <button
-          onClick={() => setAbaTurma('material')}
+          onClick={() => { setAbaTurma('material'); setSecaoMaterial(null) }}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition ${
             abaTurma === 'material' ? 'bg-navy text-white shadow-sm' : 'text-ink-soft hover:text-ink'
           }`}>
-          <BookOpenText size={15} /> Material da aula
+          <BookOpenText size={15} /> Class Material
         </button>
       </div>
 
       {abaTurma === 'material' && (
         progresso?.licao_atual
-          ? <LeitorMaterial nivel={turmaSel.nivel} licao={progresso.licao_atual} audiencia="professor" />
-          : <EstadoVazio titulo="Turma ainda sem lição atual" descricao="Avance a lição dessa turma no Gestão pra liberar o material aqui." />
+          ? <MenuSecoesLicao nivel={turmaSel.nivel} licao={progresso.licao_atual} audiencia="professor" secaoSel={secaoMaterial} onSelecionarSecao={setSecaoMaterial} />
+          : <EstadoVazio titulo="No current lesson yet" descricao="Advance this class's lesson in Gestão to unlock the material here." />
       )}
 
       {abaTurma === 'correcao' && (
         <>
           <div>
-            <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide mb-2">Pendentes ({pendentes.length})</h3>
-            {pendentes.length === 0 && <p className="text-sm text-ink-faint">Nada pendente.</p>}
+            <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide mb-2">Pending ({pendentes.length})</h3>
+            {pendentes.length === 0 && <p className="text-sm text-ink-faint">Nothing pending.</p>}
             <div className="space-y-2">
               {pendentes.map((t) => (
                 <button key={t.id} onClick={() => setTentativaAberta(t)} className="w-full flex items-center justify-between bg-surface border border-line rounded-xl px-4 py-3 text-left hover:border-amber/40 transition">
@@ -118,14 +120,14 @@ export function MinhasTurmas({ professorId }) {
                     <p className="text-sm font-medium text-ink">{t.aluno_nome}</p>
                     <p className="text-xs text-ink-soft">{exerciciosPorId[t.exercicio_id]?.titulo}</p>
                   </div>
-                  <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-amber-soft text-amber shrink-0"><Clock size={12} /> corrigir</span>
+                  <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-amber-soft text-amber shrink-0"><Clock size={12} /> grade</span>
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide mb-2">Corrigidas ({corrigidas.length})</h3>
+            <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide mb-2">Graded ({corrigidas.length})</h3>
             <div className="space-y-2">
               {corrigidas.map((t) => (
                 <button key={t.id} onClick={() => setTentativaAberta(t)} className="w-full flex items-center justify-between bg-surface border border-line rounded-xl px-4 py-3 text-left hover:border-teal/40 transition">
@@ -133,7 +135,7 @@ export function MinhasTurmas({ professorId }) {
                     <p className="text-sm font-medium text-ink">{t.aluno_nome}</p>
                     <p className="text-xs text-ink-soft">{exerciciosPorId[t.exercicio_id]?.titulo}</p>
                   </div>
-                  <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-teal-soft text-teal shrink-0"><CheckCircle2 size={12} /> nota {t.nota}</span>
+                  <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-teal-soft text-teal shrink-0"><CheckCircle2 size={12} /> grade {t.nota}</span>
                 </button>
               ))}
             </div>

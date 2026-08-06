@@ -4,11 +4,13 @@ import { UserX } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { ListaExercicios } from './ListaExercicios'
-import { LeitorMaterial } from './LeitorMaterial'
 import { LivrosGrid } from './LivrosGrid'
+import { BlocosLicoes } from './BlocosLicoes'
 import { LicoesGrid } from './LicoesGrid'
+import { MenuSecoesLicaoAluno } from './MenuSecoesLicaoAluno'
+import { NavTopo } from './NavTopo'
 import { Configuracoes } from './Configuracoes'
-import { LogOut, ChevronLeft, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, Flame, Star, User } from 'lucide-react'
+import { LogOut, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, Flame, Star, User } from 'lucide-react'
 import { Carregando } from './Carregando'
 
 export function AreaAluno() {
@@ -21,10 +23,13 @@ export function AreaAluno() {
   const [xp, setXp] = useState(0)
   const [livros, setLivros] = useState([])
   const [carregando, setCarregando] = useState(true)
-  const [livroSel, setLivroSel] = useState(null)
-  const [licaoSel, setLicaoSel] = useState(null)
   const [mostrarConfig, setMostrarConfig] = useState(false)
+
+  const [livroSel, setLivroSel] = useState(null)
+  const [blocoSel, setBlocoSel] = useState(null)
+  const [licaoSel, setLicaoSel] = useState(null)
   const [abaLicao, setAbaLicao] = useState('conteudo')
+  const [secaoSel, setSecaoSel] = useState(null)
 
   useEffect(() => {
     async function carregar() {
@@ -82,19 +87,35 @@ export function AreaAluno() {
     _livro: l,
   }))
 
-  function selecionarLicao(numero) {
-    setLicaoSel(numero)
-    setAbaLicao('conteudo')
-  }
-
   function irParaAprender() {
     setMostrarConfig(false)
   }
 
   function irParaPerfil() {
     setMostrarConfig(true)
-    setLivroSel(null)
-    setLicaoSel(null)
+    resetarNavegacao()
+  }
+
+  function resetarNavegacao() {
+    setLivroSel(null); setBlocoSel(null); setLicaoSel(null); setAbaLicao('conteudo'); setSecaoSel(null)
+  }
+
+  function irParaHome() {
+    setMostrarConfig(false)
+    resetarNavegacao()
+  }
+
+  function voltarUmNivel() {
+    if (secaoSel) { setSecaoSel(null); return }
+    if (licaoSel) { setLicaoSel(null); setAbaLicao('conteudo'); return }
+    if (blocoSel) { setBlocoSel(null); return }
+    if (livroSel) { setLivroSel(null); return }
+  }
+
+  function selecionarLicao(numero) {
+    setLicaoSel(numero)
+    setAbaLicao('conteudo')
+    setSecaoSel(null)
   }
 
   const licoes = livroSel
@@ -108,13 +129,19 @@ export function AreaAluno() {
 
   const primeiroNome = nomeAluno.split(' ')[0]
   const totalLicoes = livros.reduce((soma, l) => soma + l.licoes.length, 0)
-  const naTelaInicial = !livroSel && !licaoSel && !mostrarConfig
+  const naTelaInicial = !livroSel && !mostrarConfig
+
+  const tituloTopo = licaoSel
+    ? `${livroSel?.nivel} · Lesson ${String(licaoSel).padStart(2, '0')}`
+    : blocoSel
+    ? `${livroSel?.nivel} · ${String(blocoSel.inicio).padStart(2, '0')}–${String(blocoSel.fim).padStart(2, '0')}`
+    : livroSel?.nivel
 
   return (
     <div className="min-h-screen bg-paper pb-20">
       <header className="bg-navy">
         <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center gap-2">
-          <button onClick={irParaAprender} className="flex items-center gap-2 text-left shrink-0">
+          <button onClick={irParaHome} className="flex items-center gap-2 text-left shrink-0">
             <div className="w-7 h-7 rounded-lg bg-amber flex items-center justify-center font-display font-bold text-navy-deep text-xs shrink-0">FF</div>
             <p className="font-mono text-amber text-[10px] tracking-[0.2em] uppercase hidden sm:block">Fast Fluent</p>
           </button>
@@ -147,17 +174,17 @@ export function AreaAluno() {
               <div className="bg-surface border border-line rounded-2xl p-3 text-center">
                 <Flame size={18} className="text-amber mx-auto mb-1" />
                 <p className="text-lg font-bold text-ink">{streak}</p>
-                <p className="text-[10px] text-ink-soft">sequência</p>
+                <p className="text-[10px] text-ink-soft">streak</p>
               </div>
               <div className="bg-surface border border-line rounded-2xl p-3 text-center">
                 <Star size={18} className="text-amber mx-auto mb-1" />
                 <p className="text-lg font-bold text-ink">{xp}</p>
-                <p className="text-[10px] text-ink-soft">XP total</p>
+                <p className="text-[10px] text-ink-soft">total XP</p>
               </div>
               <div className="bg-surface border border-line rounded-2xl p-3 text-center">
                 <Rocket size={18} className="text-teal mx-auto mb-1" />
                 <p className="text-lg font-bold text-ink">{streakRecorde}</p>
-                <p className="text-[10px] text-ink-soft">recorde</p>
+                <p className="text-[10px] text-ink-soft">best streak</p>
               </div>
             </div>
             <Configuracoes avatarUrl={avatarUrl} onAvatarAtualizado={setAvatarUrl} />
@@ -167,7 +194,7 @@ export function AreaAluno() {
             {carregando && <Carregando />}
 
             {!carregando && !clienteId && (
-              <EstadoVazio icone={UserX} titulo="Conta não vinculada" descricao="Fale com a secretaria pra vincular seu cadastro de aluno." />
+              <EstadoVazio icone={UserX} titulo="Account not linked" descricao="Please contact the office to link your student account." />
             )}
 
             {!carregando && clienteId && naTelaInicial && (
@@ -180,9 +207,9 @@ export function AreaAluno() {
                   </div>
                   <div>
                     <p className="font-display text-lg font-bold text-white leading-tight">
-                      {primeiroNome ? `Olá, ${primeiroNome}!` : 'Bem-vindo(a)!'}
+                      {primeiroNome ? `Hi, ${primeiroNome}!` : 'Welcome!'}
                     </p>
-                    <p className="text-xs text-white/60 mt-0.5">Continue sua jornada.</p>
+                    <p className="text-xs text-white/60 mt-0.5">Keep your journey going.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -190,73 +217,68 @@ export function AreaAluno() {
                     <Rocket size={18} className="text-amber shrink-0" />
                     <div>
                       <p className="text-sm font-semibold text-white">{totalLicoes}</p>
-                      <p className="text-[11px] text-white/50">{totalLicoes === 1 ? 'lição' : 'lições'}</p>
+                      <p className="text-[11px] text-white/50">{totalLicoes === 1 ? 'lesson' : 'lessons'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 bg-white/[0.06] rounded-2xl px-4 py-3">
                     <Flame size={18} className="text-amber shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-white">{streak} {streak === 1 ? 'dia' : 'dias'}</p>
-                      <p className="text-[11px] text-white/50">de sequência</p>
+                      <p className="text-sm font-semibold text-white">{streak} {streak === 1 ? 'day' : 'days'}</p>
+                      <p className="text-[11px] text-white/50">streak</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {!carregando && clienteId && livros.length === 0 && (
-              <EstadoVazio titulo="Nenhuma lição por aqui ainda" descricao="Assim que sua turma avançar, as lições aparecem aqui." />
+            {!carregando && clienteId && naTelaInicial && (
+              livros.length === 0
+                ? <EstadoVazio titulo="No lessons here yet" descricao="As soon as your class moves forward, lessons will show up here." />
+                : (
+                  <div className="animar-entrada">
+                    <h2 className="font-display text-lg font-semibold text-ink mb-1">Your books</h2>
+                    <p className="text-sm text-ink-soft mb-4">Choose a book.</p>
+                    <LivrosGrid livros={livrosParaGrid} onSelecionar={(l) => setLivroSel(l._livro)} />
+                  </div>
+                )
             )}
 
-            {!carregando && livros.length >= 1 && !livroSel && (
-              <div className="animar-entrada">
-                <h2 className="font-display text-lg font-semibold text-ink mb-1">Seus livros</h2>
-                <p className="text-sm text-ink-soft mb-4">Escolha o livro.</p>
-                <LivrosGrid livros={livrosParaGrid} onSelecionar={(l) => setLivroSel(l._livro)} />
-              </div>
-            )}
+            {livroSel && (
+              <div>
+                <NavTopo onVoltar={voltarUmNivel} onHome={irParaHome} titulo={tituloTopo} />
 
-            {!carregando && livroSel && !licaoSel && (
-              <div className="animar-entrada">
-                {livros.length >= 1 && (
-                  <button onClick={() => setLivroSel(null)} className="flex items-center gap-1 text-sm text-ink-soft hover:text-ink mb-3 transition">
-                    <ChevronLeft size={16} /> Livros
-                  </button>
+                {!blocoSel && (
+                  <BlocosLicoes licoes={licoes} onSelecionarBloco={setBlocoSel} />
                 )}
-                <h2 className="font-display text-lg font-semibold text-ink mb-1">{livroSel.nivel}</h2>
-                <p className="text-sm text-ink-soft mb-4">
-                  {livroSel.licoes.length} {livroSel.licoes.length === 1 ? 'lição liberada.' : 'lições liberadas.'}
-                </p>
-                <LicoesGrid licoes={licoes} onSelecionar={selecionarLicao} />
-              </div>
-            )}
 
-            {!carregando && livroSel && licaoSel && (
-              <div className="animar-entrada">
-                <button onClick={() => setLicaoSel(null)} className="flex items-center gap-1 text-sm text-ink-soft hover:text-ink mb-4 transition">
-                  <ChevronLeft size={16} /> {livroSel.nivel} — Lições
-                </button>
+                {blocoSel && !licaoSel && (
+                  <LicoesGrid licoes={blocoSel.trio} onSelecionar={selecionarLicao} />
+                )}
 
-                <div className="inline-flex bg-paper border border-line rounded-full p-1 mb-5">
-                  <button
-                    onClick={() => setAbaLicao('conteudo')}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition ${
-                      abaLicao === 'conteudo' ? 'bg-navy text-white shadow-sm' : 'text-ink-soft hover:text-ink'
-                    }`}>
-                    <BookOpenText size={15} /> Conteúdo
-                  </button>
-                  <button
-                    onClick={() => setAbaLicao('exercicios')}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition ${
-                      abaLicao === 'exercicios' ? 'bg-navy text-white shadow-sm' : 'text-ink-soft hover:text-ink'
-                    }`}>
-                    <ListChecks size={15} /> Exercícios
-                  </button>
-                </div>
+                {licaoSel && (
+                  <div>
+                    <div className="inline-flex bg-paper border border-line rounded-full p-1 mb-5">
+                      <button
+                        onClick={() => { setAbaLicao('conteudo'); setSecaoSel(null) }}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition ${
+                          abaLicao === 'conteudo' ? 'bg-navy text-white shadow-sm' : 'text-ink-soft hover:text-ink'
+                        }`}>
+                        <BookOpenText size={15} /> Content
+                      </button>
+                      <button
+                        onClick={() => setAbaLicao('exercicios')}
+                        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition ${
+                          abaLicao === 'exercicios' ? 'bg-navy text-white shadow-sm' : 'text-ink-soft hover:text-ink'
+                        }`}>
+                        <ListChecks size={15} /> Exercises
+                      </button>
+                    </div>
 
-                {abaLicao === 'conteudo'
-                  ? <LeitorMaterial nivel={livroSel.nivel} licao={licaoSel} />
-                  : <ListaExercicios clienteId={clienteId} nivel={livroSel.nivel} licao={licaoSel} />}
+                    {abaLicao === 'conteudo'
+                      ? <MenuSecoesLicaoAluno nivel={livroSel.nivel} licao={licaoSel} secaoSel={secaoSel} onSelecionarSecao={setSecaoSel} />
+                      : <ListaExercicios clienteId={clienteId} nivel={livroSel.nivel} licao={licaoSel} />}
+                  </div>
+                )}
               </div>
             )}
           </>
@@ -269,12 +291,12 @@ export function AreaAluno() {
             <button onClick={irParaAprender}
               className={`flex flex-col items-center gap-0.5 py-2.5 transition ${!mostrarConfig ? 'text-amber' : 'text-ink-faint'}`}>
               <BookOpenText size={20} />
-              <span className="text-[10px] font-medium">Aprender</span>
+              <span className="text-[10px] font-medium">Learn</span>
             </button>
             <button onClick={irParaPerfil}
               className={`flex flex-col items-center gap-0.5 py-2.5 transition ${mostrarConfig ? 'text-amber' : 'text-ink-faint'}`}>
               <User size={20} />
-              <span className="text-[10px] font-medium">Perfil</span>
+              <span className="text-[10px] font-medium">Profile</span>
             </button>
           </div>
         </nav>

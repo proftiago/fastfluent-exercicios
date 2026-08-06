@@ -51,15 +51,15 @@ export function ListaExercicios({ clienteId, nivel, licao }) {
 
     if (todasRespondidas) {
       setComemoracao({
-        titulo: 'Lição concluída! 🚀',
+        titulo: 'Lesson complete! 🚀',
         descricao: atividade
-          ? `Você já enviou tudo por aqui. Sequência: ${atividade.streak_atual} dia${atividade.streak_atual !== 1 ? 's' : ''} · ${atividade.xp_total} XP no total.`
-          : 'Você já enviou tudo por aqui.',
+          ? `You've submitted everything here. Streak: ${atividade.streak_atual} day${atividade.streak_atual !== 1 ? 's' : ''} · ${atividade.xp_total} total XP.`
+          : "You've submitted everything here.",
       })
     } else if (atividade?.streak_aumentou) {
       setComemoracao({
-        titulo: `🔥 Sequência de ${atividade.streak_atual} dia${atividade.streak_atual !== 1 ? 's' : ''}!`,
-        descricao: `Continue assim — você já tem ${atividade.xp_total} XP.`,
+        titulo: `🔥 ${atividade.streak_atual} day${atividade.streak_atual !== 1 ? 's' : ''} streak!`,
+        descricao: `Keep it up — you already have ${atividade.xp_total} XP.`,
       })
     }
   }
@@ -68,7 +68,7 @@ export function ListaExercicios({ clienteId, nivel, licao }) {
 
   if (exercicios.length === 0) {
     return (
-      <EstadoVazio icone={ListChecks} titulo="Sem exercícios por aqui" descricao="Volte mais tarde — novos exercícios podem aparecer a qualquer momento." />
+      <EstadoVazio icone={ListChecks} titulo="No exercises here yet" descricao="Check back later — new exercises may show up anytime." />
     )
   }
 
@@ -98,22 +98,22 @@ export function ListaExercicios({ clienteId, nivel, licao }) {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-ink truncate">{ex.titulo}</p>
                     <p className="text-xs text-ink-soft font-mono mt-0.5">
-                      {ex.nivel} · lição {String(ex.licao).padStart(2, '0')} {ex.prazo && `· prazo ${ex.prazo}`}
+                      {ex.nivel} · lição {String(ex.licao).padStart(2, '0')} {ex.prazo && `· due ${ex.prazo}`}
                     </p>
                   </div>
                   {tentativa ? (
                     tentativa.status === 'pendente' ? (
                       <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-amber-soft text-amber shrink-0">
-                        <Clock size={12} /> aguardando correção
+                        <Clock size={12} /> awaiting grading
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-teal-soft text-teal shrink-0">
-                        <CheckCircle2 size={12} /> nota {tentativa.nota ?? '—'}
+                        <CheckCircle2 size={12} /> grade {tentativa.nota ?? '—'}
                       </span>
                     )
                   ) : (
                     <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-paper text-ink-soft shrink-0">
-                      responder
+                      answer
                     </span>
                   )}
                 </button>
@@ -142,8 +142,8 @@ export function ListaExercicios({ clienteId, nivel, licao }) {
 
   return (
     <div className="space-y-6">
-      {renderGrupo('Tarefas', tarefas)}
-      {renderGrupo('Exercícios extras', extras)}
+      {renderGrupo('Homework', tarefas)}
+      {renderGrupo('Extra Exercises', extras)}
       {comemoracao && <Comemoracao {...comemoracao} onFechar={() => setComemoracao(null)} />}
     </div>
   )

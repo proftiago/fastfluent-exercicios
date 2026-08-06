@@ -10,7 +10,7 @@ export function VisualizarTentativa({ exercicio, tentativa }) {
 
       <div className="space-y-3">
         {itensBase.map((item, i) => {
-          const suaResposta = tentativa.resposta?.itens?.find((x) => x.id === item.id)?.texto || '(sem resposta)'
+          const suaResposta = tentativa.resposta?.itens?.find((x) => x.id === item.id)?.texto || '(no answer)'
           const comentario = tentativa.correcao_itens?.find((c) => c.id === item.id)?.comentario
 
           return (
@@ -29,13 +29,13 @@ export function VisualizarTentativa({ exercicio, tentativa }) {
 
       {corrigida && (
         <div className="bg-teal-soft rounded-lg p-4 space-y-1">
-          <p className="text-sm font-semibold text-teal">Nota: {tentativa.nota ?? '—'}</p>
+          <p className="text-sm font-semibold text-teal">Grade: {tentativa.nota ?? '—'}</p>
           {tentativa.feedback && <p className="text-sm text-teal">{tentativa.feedback}</p>}
         </div>
       )}
 
       {!corrigida && (
-        <p className="text-sm text-amber bg-amber-soft rounded-lg px-3 py-2">Aguardando correção do professor.</p>
+        <p className="text-sm text-amber bg-amber-soft rounded-lg px-3 py-2">Awaiting the teacher's grading.</p>
       )}
     </div>
   )

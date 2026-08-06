@@ -1,37 +1,65 @@
 import { useState } from 'react'
 import { LivrosGrid, NIVEIS } from './LivrosGrid'
 import { LicoesGrid } from './LicoesGrid'
-import { LeitorMaterial } from './LeitorMaterial'
-import { ChevronLeft } from 'lucide-react'
+import { BlocosLicoesProfessor } from './BlocosLicoesProfessor'
+import { MenuSecoesLicao } from './MenuSecoesLicao'
+import { SelecaoTrilha } from './SelecaoTrilha'
+import { TrilhaEmBreve } from './TrilhaEmBreve'
+import { NavTopo } from './NavTopo'
 
 export function ConteudoProfessor() {
+  const [trilhaSel, setTrilhaSel] = useState(null)
   const [nivelSel, setNivelSel] = useState(null)
+  const [blocoSel, setBlocoSel] = useState(null)
   const [licaoSel, setLicaoSel] = useState(null)
+  const [secaoSel, setSecaoSel] = useState(null)
 
   const livros = NIVEIS.map((nivel) => ({ nivel, bloqueado: false }))
   const licoes = Array.from({ length: 18 }, (_, i) => ({ numero: i + 1, bloqueada: false }))
 
-  if (nivelSel && licaoSel) {
-    return (
-      <div>
-        <button onClick={() => setLicaoSel(null)} className="flex items-center gap-1 text-sm text-ink-soft hover:text-ink mb-4 transition">
-          <ChevronLeft size={16} /> {nivelSel} — Lições
-        </button>
-        <LeitorMaterial nivel={nivelSel} licao={licaoSel} audiencia="professor" />
-      </div>
-    )
+  function irParaHome() {
+    setTrilhaSel(null); setNivelSel(null); setBlocoSel(null); setLicaoSel(null); setSecaoSel(null)
   }
 
-  if (nivelSel) {
-    return (
-      <div>
-        <button onClick={() => setNivelSel(null)} className="flex items-center gap-1 text-sm text-ink-soft hover:text-ink mb-4 transition">
-          <ChevronLeft size={16} /> Livros
-        </button>
-        <LicoesGrid licoes={licoes} onSelecionar={setLicaoSel} />
-      </div>
-    )
+  function voltarUmNivel() {
+    if (secaoSel) { setSecaoSel(null); return }
+    if (licaoSel) { setLicaoSel(null); return }
+    if (blocoSel) { setBlocoSel(null); return }
+    if (nivelSel) { setNivelSel(null); return }
+    if (trilhaSel) { setTrilhaSel(null); return }
   }
 
-  return <LivrosGrid livros={livros} onSelecionar={(l) => setNivelSel(l.nivel)} />
+  if (!trilhaSel) {
+    return <SelecaoTrilha onSelecionar={setTrilhaSel} />
+  }
+
+  const titulo = licaoSel
+    ? `${nivelSel} · Lesson ${String(licaoSel).padStart(2, '0')}`
+    : blocoSel
+    ? `${nivelSel} · Block ${blocoSel.numero}`
+    : nivelSel || trilhaSel.nome
+
+  return (
+    <div>
+      <NavTopo onVoltar={voltarUmNivel} onHome={irParaHome} titulo={titulo} />
+
+      {!trilhaSel.ativa && !nivelSel && <TrilhaEmBreve nome={trilhaSel.nome} />}
+
+      {trilhaSel.ativa && !nivelSel && (
+        <LivrosGrid livros={livros} onSelecionar={(l) => setNivelSel(l.nivel)} />
+      )}
+
+      {nivelSel && !blocoSel && (
+        <BlocosLicoesProfessor nivel={nivelSel} licoes={licoes} onSelecionarBloco={setBlocoSel} />
+      )}
+
+      {blocoSel && !licaoSel && (
+        <LicoesGrid licoes={blocoSel.trio} onSelecionar={setLicaoSel} />
+      )}
+
+      {licaoSel && (
+        <MenuSecoesLicao nivel={nivelSel} licao={licaoSel} audiencia="professor" secaoSel={secaoSel} onSelecionarSecao={setSecaoSel} />
+      )}
+    </div>
+  )
 }

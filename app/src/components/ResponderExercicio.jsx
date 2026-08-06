@@ -19,7 +19,7 @@ export function ResponderExercicio({ exercicio, clienteId, onEnviado, onCancelar
     setErro('')
     const itens = itensBase.map((item) => ({ id: item.id, texto: (respostas[item.id] || '').trim() }))
     if (itens.some((i) => !i.texto)) {
-      setErro('Responda todos os campos antes de enviar.')
+      setErro('Please answer all fields before submitting.')
       return
     }
     setEnviando(true)
@@ -30,7 +30,7 @@ export function ResponderExercicio({ exercicio, clienteId, onEnviado, onCancelar
     })
     setEnviando(false)
     if (error) {
-      setErro(`Erro ao enviar: ${error.message}`)
+      setErro(`Error submitting: ${error.message}`)
       return
     }
 
@@ -60,7 +60,7 @@ export function ResponderExercicio({ exercicio, clienteId, onEnviado, onCancelar
         </div>
       )}
       {exercicio.tipo === 'criar_perguntas' && (
-        <p className="text-sm text-ink-soft">Escreva a pergunta correspondente a cada resposta abaixo.</p>
+        <p className="text-sm text-ink-soft">Write the question that matches each answer below.</p>
       )}
       <div className="space-y-3">
         {itensBase.map((item, i) => (
@@ -73,7 +73,7 @@ export function ResponderExercicio({ exercicio, clienteId, onEnviado, onCancelar
               onChange={(e) => setRespostas((prev) => ({ ...prev, [item.id]: e.target.value }))}
               rows={exercicio.tipo === 'criar_perguntas' ? 1 : 2}
               className="w-full border border-line rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber"
-              placeholder={exercicio.tipo === 'criar_perguntas' ? 'Sua pergunta...' : 'Sua resposta...'}
+              placeholder={exercicio.tipo === 'criar_perguntas' ? 'Your question...' : 'Your answer...'}
             />
           </div>
         ))}
@@ -81,9 +81,9 @@ export function ResponderExercicio({ exercicio, clienteId, onEnviado, onCancelar
       {erro && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{erro}</p>}
       <div className="flex gap-2">
         <button type="submit" disabled={enviando} className="pressionavel bg-navy text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-navy-deep disabled:opacity-50 transition">
-          {enviando ? 'Enviando...' : 'Enviar respostas'}
+          {enviando ? 'Submitting...' : 'Submit Answers'}
         </button>
-        <button type="button" onClick={onCancelar} className="text-sm text-ink-soft px-3">Cancelar</button>
+        <button type="button" onClick={onCancelar} className="text-sm text-ink-soft px-3">Cancel</button>
       </div>
     </form>
   )
