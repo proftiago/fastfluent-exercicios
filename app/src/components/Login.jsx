@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import logoNavy from '../assets/logo-navy.png'
 
 export function Login() {
   const [email, setEmail] = useState('')
@@ -27,12 +28,11 @@ export function Login() {
 
       <div className="w-full max-w-sm relative animar-entrada">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-navy flex items-center justify-center font-display font-bold text-amber text-lg mb-3">FF</div>
-          <p className="font-mono text-navy text-[11px] tracking-[0.25em] uppercase">Fast Fluent</p>
+          <img src={logoNavy} alt="Fast Fluent" className="h-14 w-auto" />
         </div>
 
-        <h1 className="font-display text-2xl font-semibold text-ink mb-1 text-center">Entrar</h1>
-        <p className="text-sm text-ink-soft mb-6 text-center">Acesse seus exercícios.</p>
+        <h1 className="font-display text-2xl font-semibold text-ink mb-1 text-center">Continue sua jornada</h1>
+        <p className="text-sm text-ink-soft mb-6 text-center">Entre para seguir rumo à fluência.</p>
 
         <form onSubmit={handleSubmit} className="bg-surface rounded-2xl shadow-card border border-line p-7 space-y-4">
           <div>

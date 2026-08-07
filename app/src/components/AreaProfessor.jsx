@@ -5,6 +5,7 @@ import { MinhasTurmas } from './MinhasTurmas'
 import { ConteudoProfessor } from './ConteudoProfessor'
 import { Configuracoes } from './Configuracoes'
 import { LogOut, ChevronLeft, BookOpenText, Users, Bell, X, Settings, Camera, Rocket, Sparkles, Flame, Star } from 'lucide-react'
+import logoBranco from '../assets/logo-branco.png'
 
 const CHAVE_ULTIMA_VISTA = 'ff_ultima_notif_vista'
 
@@ -73,7 +74,7 @@ export function AreaProfessor() {
       <header className="bg-navy relative">
         <div className="max-w-2xl mx-auto px-4 py-5 flex justify-between items-center">
           <div>
-            <p className="font-mono text-amber text-[11px] tracking-[0.2em] uppercase">Fast Fluent</p>
+            <img src={logoBranco} alt="Fast Fluent" className="h-4 w-auto mb-1" />
             <h1 className="font-display text-xl font-semibold text-white">{titulo}</h1>
           </div>
           <div className="flex items-center gap-3">
@@ -127,7 +128,7 @@ export function AreaProfessor() {
                   {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={16} className="text-white/50" />}
                 </div>
                 <div>
-                  <p className="font-mono text-amber text-[10px] tracking-[0.2em] uppercase mb-0.5">Fast Fluent</p>
+                  <img src={logoBranco} alt="Fast Fluent" className="h-3.5 w-auto mb-1" />
                   <h2 className="font-display text-xl font-bold text-white">Hi, {nome || 'teacher'}!</h2>
                 </div>
               </div>

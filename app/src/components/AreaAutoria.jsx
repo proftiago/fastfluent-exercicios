@@ -10,6 +10,7 @@ import { EditarLicoesLista } from './EditarLicoesLista'
 import { Carregando } from './Carregando'
 import { useAuth } from '../context/AuthContext'
 import { BookOpen, Rocket, LogOut, ChevronLeft, FileEdit } from 'lucide-react'
+import logoBranco from '../assets/logo-branco.png'
 
 export function AreaAutoria() {
   const { signOut } = useAuth()
@@ -59,12 +60,9 @@ export function AreaAutoria() {
   return (
     <div className="min-h-screen bg-paper flex flex-col md:flex-row">
       <aside className="md:w-60 shrink-0 bg-navy flex md:flex-col md:sticky md:top-0 md:h-screen md:overflow-y-auto">
-        <div className="px-5 py-6 flex md:flex-col items-center md:items-start gap-3 md:gap-1 flex-1 md:flex-none">
-          <div className="w-9 h-9 rounded-lg bg-amber flex items-center justify-center font-display font-bold text-navy-deep text-sm">FF</div>
-          <div>
-            <p className="font-mono text-amber text-[10px] tracking-[0.2em] uppercase leading-none">Fast Fluent</p>
-            <p className="font-display text-white text-sm font-semibold mt-0.5">Exercícios</p>
-          </div>
+        <div className="px-5 py-6 flex md:flex-col items-center md:items-start gap-1 flex-1 md:flex-none">
+          <img src={logoBranco} alt="Fast Fluent" className="h-7 w-auto mb-1" />
+          <p className="font-display text-white text-sm font-semibold">Exercícios</p>
         </div>
 
         <nav className="flex md:flex-col gap-0.5 px-3 md:px-3 md:mt-3 md:flex-1">

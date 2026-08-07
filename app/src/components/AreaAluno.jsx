@@ -10,8 +10,10 @@ import { LicoesGrid } from './LicoesGrid'
 import { MenuSecoesLicaoAluno } from './MenuSecoesLicaoAluno'
 import { NavTopo } from './NavTopo'
 import { Configuracoes } from './Configuracoes'
-import { LogOut, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, Flame, Star, User } from 'lucide-react'
+import { HistoricoAluno } from './HistoricoAluno'
+import { LogOut, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, Flame, Star, User, CalendarCheck } from 'lucide-react'
 import { Carregando } from './Carregando'
+import logoBranco from '../assets/logo-branco.png'
 
 export function AreaAluno() {
   const { session, signOut } = useAuth()
@@ -23,7 +25,7 @@ export function AreaAluno() {
   const [xp, setXp] = useState(0)
   const [livros, setLivros] = useState([])
   const [carregando, setCarregando] = useState(true)
-  const [mostrarConfig, setMostrarConfig] = useState(false)
+  const [telaAtiva, setTelaAtiva] = useState('aprender') // 'aprender' | 'historico' | 'perfil'
 
   const [livroSel, setLivroSel] = useState(null)
   const [blocoSel, setBlocoSel] = useState(null)
@@ -88,11 +90,16 @@ export function AreaAluno() {
   }))
 
   function irParaAprender() {
-    setMostrarConfig(false)
+    setTelaAtiva('aprender')
+  }
+
+  function irParaHistorico() {
+    setTelaAtiva('historico')
+    resetarNavegacao()
   }
 
   function irParaPerfil() {
-    setMostrarConfig(true)
+    setTelaAtiva('perfil')
     resetarNavegacao()
   }
 
@@ -101,7 +108,7 @@ export function AreaAluno() {
   }
 
   function irParaHome() {
-    setMostrarConfig(false)
+    setTelaAtiva('aprender')
     resetarNavegacao()
   }
 
@@ -129,7 +136,7 @@ export function AreaAluno() {
 
   const primeiroNome = nomeAluno.split(' ')[0]
   const totalLicoes = livros.reduce((soma, l) => soma + l.licoes.length, 0)
-  const naTelaInicial = !livroSel && !mostrarConfig
+  const naTelaInicial = !livroSel && telaAtiva === 'aprender'
 
   const tituloTopo = licaoSel
     ? `${livroSel?.nivel} · Lesson ${String(licaoSel).padStart(2, '0')}`
@@ -141,9 +148,8 @@ export function AreaAluno() {
     <div className="min-h-screen bg-paper pb-20">
       <header className="bg-navy">
         <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center gap-2">
-          <button onClick={irParaHome} className="flex items-center gap-2 text-left shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-amber flex items-center justify-center font-display font-bold text-navy-deep text-xs shrink-0">FF</div>
-            <p className="font-mono text-amber text-[10px] tracking-[0.2em] uppercase hidden sm:block">Fast Fluent</p>
+          <button onClick={irParaHome} className="flex items-center shrink-0">
+            <img src={logoBranco} alt="Fast Fluent" className="h-6 w-auto" />
           </button>
 
           {clienteId && (
@@ -168,7 +174,7 @@ export function AreaAluno() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {mostrarConfig ? (
+        {telaAtiva === 'perfil' ? (
           <div>
             <div className="grid grid-cols-3 gap-2 mb-6">
               <div className="bg-surface border border-line rounded-2xl p-3 text-center">
@@ -188,6 +194,11 @@ export function AreaAluno() {
               </div>
             </div>
             <Configuracoes avatarUrl={avatarUrl} onAvatarAtualizado={setAvatarUrl} />
+          </div>
+        ) : telaAtiva === 'historico' ? (
+          <div>
+            {carregando && <Carregando />}
+            {!carregando && clienteId && <HistoricoAluno clienteId={clienteId} nomeAluno={nomeAluno} />}
           </div>
         ) : (
           <>
@@ -286,15 +297,20 @@ export function AreaAluno() {
       </main>
 
       {clienteId && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-line z-30">
-          <div className="max-w-2xl mx-auto grid grid-cols-2">
+        <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-line z-30 print:hidden">
+          <div className="max-w-2xl mx-auto grid grid-cols-3">
             <button onClick={irParaAprender}
-              className={`flex flex-col items-center gap-0.5 py-2.5 transition ${!mostrarConfig ? 'text-amber' : 'text-ink-faint'}`}>
+              className={`flex flex-col items-center gap-0.5 py-2.5 transition ${telaAtiva === 'aprender' ? 'text-amber' : 'text-ink-faint'}`}>
               <BookOpenText size={20} />
               <span className="text-[10px] font-medium">Learn</span>
             </button>
+            <button onClick={irParaHistorico}
+              className={`flex flex-col items-center gap-0.5 py-2.5 transition ${telaAtiva === 'historico' ? 'text-amber' : 'text-ink-faint'}`}>
+              <CalendarCheck size={20} />
+              <span className="text-[10px] font-medium">History</span>
+            </button>
             <button onClick={irParaPerfil}
-              className={`flex flex-col items-center gap-0.5 py-2.5 transition ${mostrarConfig ? 'text-amber' : 'text-ink-faint'}`}>
+              className={`flex flex-col items-center gap-0.5 py-2.5 transition ${telaAtiva === 'perfil' ? 'text-amber' : 'text-ink-faint'}`}>
               <User size={20} />
               <span className="text-[10px] font-medium">Profile</span>
             </button>
