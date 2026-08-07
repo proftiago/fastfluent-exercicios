@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { MinhasTurmas } from './MinhasTurmas'
 import { ConteudoProfessor } from './ConteudoProfessor'
 import { Configuracoes } from './Configuracoes'
-import { LogOut, ChevronLeft, BookOpenText, Users, Bell, X, Settings, Camera, Rocket, Sparkles, Flame, Star } from 'lucide-react'
+import { CorrecoesRecentes } from './CorrecoesRecentes'
+import { LogOut, ChevronLeft, BookOpenText, Users, Bell, X, Settings, Camera, Rocket, Sparkles, Flame, Star, ClipboardCheck } from 'lucide-react'
 import logoBranco from '../assets/logo-branco.png'
 
 const CHAVE_ULTIMA_VISTA = 'ff_ultima_notif_vista'
@@ -66,7 +67,7 @@ export function AreaProfessor() {
     }
   }
 
-  const titulos = { conteudo: 'Class Content', turmas: 'My Classes', config: 'Settings' }
+  const titulos = { conteudo: 'Class Content', turmas: 'My Classes', config: 'Settings', correcoes: 'Recent Corrections' }
   const titulo = tela === null ? 'Home' : titulos[tela]
 
   return (
@@ -167,6 +168,17 @@ export function AreaProfessor() {
               </div>
             </button>
 
+            <button onClick={() => setTela('correcoes')}
+              className="w-full flex items-center gap-4 bg-surface border border-line rounded-2xl p-5 hover:border-teal/40 hover:shadow-card transition text-left">
+              <div className="w-11 h-11 rounded-xl bg-teal-soft flex items-center justify-center shrink-0">
+                <ClipboardCheck size={20} className="text-teal" />
+              </div>
+              <div>
+                <p className="font-display text-base font-semibold text-ink">Recent Corrections</p>
+                <p className="text-xs text-ink-soft mt-0.5">Quickly review what you've graded</p>
+              </div>
+            </button>
+
             <button onClick={() => setTela('config')}
               className="w-full flex items-center gap-4 bg-surface border border-line rounded-2xl p-5 hover:border-navy/40 hover:shadow-card transition text-left">
               <div className="w-11 h-11 rounded-xl bg-paper flex items-center justify-center shrink-0">
@@ -187,6 +199,7 @@ export function AreaProfessor() {
             </button>
             {tela === 'conteudo' && <ConteudoProfessor />}
             {tela === 'turmas' && <MinhasTurmas professorId={professorId} />}
+            {tela === 'correcoes' && <CorrecoesRecentes professorId={professorId} />}
             {tela === 'config' && (
               <Configuracoes avatarUrl={avatarUrl} onAvatarAtualizado={setAvatarUrl} tabela="professor_contas" />
             )}

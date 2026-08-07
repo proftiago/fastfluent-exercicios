@@ -20,10 +20,20 @@ export function LivrosGrid({ livros, onSelecionar }) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/20 to-transparent" />
           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-black/20" />
+
+          {typeof l.progresso === 'number' && (
+            <div className="absolute top-2 left-2 right-2 h-1 bg-white/25 rounded-full overflow-hidden">
+              <div className="h-full bg-amber rounded-full transition-all" style={{ width: `${l.progresso}%` }} />
+            </div>
+          )}
+
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <p className="font-mono text-[10px] text-amber uppercase tracking-wide">Livro</p>
             <p className="font-display text-sm font-bold text-white leading-tight">{l.nivel}</p>
             {l.subtitulo && <p className="text-[11px] text-white/60 mt-0.5">{l.subtitulo}</p>}
+            {typeof l.progresso === 'number' && (
+              <p className="text-[10px] text-white/50 mt-0.5">{l.progresso}% concluído</p>
+            )}
           </div>
         </button>
       ))}

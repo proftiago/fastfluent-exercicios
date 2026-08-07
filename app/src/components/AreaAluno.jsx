@@ -11,9 +11,19 @@ import { MenuSecoesLicaoAluno } from './MenuSecoesLicaoAluno'
 import { NavTopo } from './NavTopo'
 import { Configuracoes } from './Configuracoes'
 import { HistoricoAluno } from './HistoricoAluno'
-import { LogOut, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, Flame, Star, User, CalendarCheck } from 'lucide-react'
+import { Comemoracao } from './Comemoracao'
+import { LogOut, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, Flame, Star, User, CalendarCheck, PlayCircle } from 'lucide-react'
 import { Carregando } from './Carregando'
 import logoBranco from '../assets/logo-branco.png'
+
+function montarLicoes(livro) {
+  return Array.from({ length: 18 }, (_, i) => {
+    const numero = i + 1
+    const liberada = livro.licoes.includes(numero)
+    const maisRecente = liberada && numero === Math.max(...livro.licoes)
+    return { numero, atual: maisRecente, concluida: liberada && !maisRecente, bloqueada: !liberada }
+  })
+}
 
 export function AreaAluno() {
   const { session, signOut } = useAuth()
@@ -22,10 +32,12 @@ export function AreaAluno() {
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [streak, setStreak] = useState(0)
   const [streakRecorde, setStreakRecorde] = useState(0)
+  const [streakEmRisco, setStreakEmRisco] = useState(false)
   const [xp, setXp] = useState(0)
   const [livros, setLivros] = useState([])
   const [carregando, setCarregando] = useState(true)
-  const [telaAtiva, setTelaAtiva] = useState('aprender') // 'aprender' | 'historico' | 'perfil'
+  const [telaAtiva, setTelaAtiva] = useState('aprender')
+  const [comemoracaoLivro, setComemoracaoLivro] = useState(null)
 
   const [livroSel, setLivroSel] = useState(null)
   const [blocoSel, setBlocoSel] = useState(null)
@@ -37,7 +49,7 @@ export function AreaAluno() {
     async function carregar() {
       const { data: conta } = await supabase
         .from('aluno_contas')
-        .select('cliente_id, avatar_url, streak_atual, streak_recorde, xp_total, clientes(nome)')
+        .select('cliente_id, avatar_url, streak_atual, streak_recorde, xp_total, ultima_atividade, clientes(nome)')
         .eq('auth_user_id', session.user.id)
         .maybeSingle()
 
@@ -48,6 +60,13 @@ export function AreaAluno() {
       setStreak(conta.streak_atual || 0)
       setStreakRecorde(conta.streak_recorde || 0)
       setXp(conta.xp_total || 0)
+
+      if (conta.streak_atual > 0 && conta.ultima_atividade) {
+        const ontem = new Date()
+        ontem.setDate(ontem.getDate() - 1)
+        const ontemStr = ontem.toISOString().slice(0, 10)
+        setStreakEmRisco(conta.ultima_atividade === ontemStr)
+      }
 
       const { data: mats } = await supabase
         .from('matriculas')
@@ -76,8 +95,29 @@ export function AreaAluno() {
         gruposMapa[chave].licoes.push(l.licao)
       })
 
-      setLivros(Object.values(gruposMapa))
+      const listaLivros = Object.values(gruposMapa)
+      setLivros(listaLivros)
       setCarregando(false)
+
+      // Comemoração de livro completo — baseado na Lição 18 ter sido DADA de
+      // verdade (existe aula registrada), não só "liberada pra ver" no app
+      for (const livro of listaLivros) {
+        if (!livro.licoes.includes(18)) continue
+        const { count } = await supabase
+          .from('aulas')
+          .select('id', { count: 'exact', head: true })
+          .eq('turma_id', livro.turmaId)
+          .eq('nivel', livro.nivel)
+          .eq('licao', 18)
+        if (count > 0) {
+          const chaveFlag = `ff_livro_completo_${conta.cliente_id}_${livro.nivel}`
+          if (!localStorage.getItem(chaveFlag)) {
+            localStorage.setItem(chaveFlag, '1')
+            setComemoracaoLivro(livro.nivel)
+          }
+          break
+        }
+      }
     }
     carregar()
   }, [session])
@@ -86,8 +126,24 @@ export function AreaAluno() {
     nivel: l.nivel,
     subtitulo: l.idioma,
     bloqueado: false,
+    progresso: Math.round((l.licoes.length / 18) * 100),
     _livro: l,
   }))
+
+  const livroEmAndamento = livros.find((l) => l.licoes.length > 0 && l.licoes.length < 18) || livros[0]
+
+  function continuarDeOndeParei() {
+    if (!livroEmAndamento) return
+    const numeroAtual = Math.max(...livroEmAndamento.licoes)
+    const indiceBloco = Math.floor((numeroAtual - 1) / 3)
+    const inicio = indiceBloco * 3
+    const licoesDoLivro = montarLicoes(livroEmAndamento)
+    setLivroSel(livroEmAndamento)
+    setBlocoSel({ numero: indiceBloco + 1, inicio: inicio + 1, fim: inicio + 3, trio: licoesDoLivro.slice(inicio, inicio + 3) })
+    setLicaoSel(numeroAtual)
+    setAbaLicao('conteudo')
+    setSecaoSel(null)
+  }
 
   function irParaAprender() {
     setTelaAtiva('aprender')
@@ -125,14 +181,7 @@ export function AreaAluno() {
     setSecaoSel(null)
   }
 
-  const licoes = livroSel
-    ? Array.from({ length: 18 }, (_, i) => {
-        const numero = i + 1
-        const liberada = livroSel.licoes.includes(numero)
-        const maisRecente = liberada && numero === Math.max(...livroSel.licoes)
-        return { numero, atual: maisRecente, concluida: liberada && !maisRecente, bloqueada: !liberada }
-      })
-    : []
+  const licoes = livroSel ? montarLicoes(livroSel) : []
 
   const primeiroNome = nomeAluno.split(' ')[0]
   const totalLicoes = livros.reduce((soma, l) => soma + l.licoes.length, 0)
@@ -209,7 +258,7 @@ export function AreaAluno() {
             )}
 
             {!carregando && clienteId && naTelaInicial && (
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-deep p-6 mb-6 shadow-card-amber animar-entrada">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-deep p-6 mb-4 shadow-card-amber animar-entrada">
                 <Sparkles size={16} className="absolute top-5 right-6 text-amber/40" />
                 <Sparkles size={10} className="absolute top-14 right-16 text-white/20" />
                 <div className="flex items-center gap-3 mb-4">
@@ -240,6 +289,30 @@ export function AreaAluno() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {!carregando && clienteId && naTelaInicial && streakEmRisco && (
+              <div className="animar-entrada flex items-center gap-3 bg-amber-soft border border-amber/30 rounded-2xl px-4 py-3 mb-4">
+                <Flame size={20} className="text-amber shrink-0" />
+                <p className="text-xs text-amber flex-1">
+                  Your <strong>{streak}-day streak</strong> is about to end! Do an exercise today to keep it going.
+                </p>
+              </div>
+            )}
+
+            {!carregando && clienteId && naTelaInicial && livroEmAndamento && livroEmAndamento.licoes.length > 0 && (
+              <button onClick={continuarDeOndeParei}
+                className="pressionavel w-full flex items-center gap-3 bg-surface border border-line rounded-2xl px-4 py-3.5 mb-6 hover:border-amber/40 hover:shadow-card transition text-left animar-entrada">
+                <div className="w-10 h-10 rounded-xl bg-amber-soft flex items-center justify-center shrink-0">
+                  <PlayCircle size={19} className="text-amber" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink">Continue where you left off</p>
+                  <p className="text-xs text-ink-soft mt-0.5">
+                    {livroEmAndamento.nivel} · Lesson {String(Math.max(...livroEmAndamento.licoes)).padStart(2, '0')}
+                  </p>
+                </div>
+              </button>
             )}
 
             {!carregando && clienteId && naTelaInicial && (
@@ -316,6 +389,14 @@ export function AreaAluno() {
             </button>
           </div>
         </nav>
+      )}
+
+      {comemoracaoLivro && (
+        <Comemoracao
+          titulo={`Book complete! 🎉`}
+          descricao={`You finished all 18 lessons of ${comemoracaoLivro}! On to the next adventure.`}
+          onFechar={() => setComemoracaoLivro(null)}
+        />
       )}
     </div>
   )

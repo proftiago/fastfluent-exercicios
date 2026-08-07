@@ -4,18 +4,20 @@ import { CorrigirTentativa } from './CorrigirTentativa'
 import { MenuSecoesLicao } from './MenuSecoesLicao'
 import { Carregando } from './Carregando'
 import { EstadoVazio } from './EstadoVazio'
-import { Clock, CheckCircle2, Users, BookOpenText, ListChecks } from 'lucide-react'
+import { Clock, CheckCircle2, Users, BookOpenText, ListChecks, Search, Download } from 'lucide-react'
 
 export function MinhasTurmas({ professorId }) {
   const [turmas, setTurmas] = useState([])
   const [turmaSel, setTurmaSel] = useState(null)
   const [progresso, setProgresso] = useState(null)
   const [tentativas, setTentativas] = useState([])
+  const [frequencia, setFrequencia] = useState([])
   const [exerciciosPorId, setExerciciosPorId] = useState({})
   const [tentativaAberta, setTentativaAberta] = useState(null)
   const [carregando, setCarregando] = useState(true)
-  const [abaTurma, setAbaTurma] = useState('correcao') // 'correcao' | 'material'
+  const [abaTurma, setAbaTurma] = useState('correcao')
   const [secaoMaterial, setSecaoMaterial] = useState(null)
+  const [busca, setBusca] = useState('')
 
   useEffect(() => {
     supabase.from('turmas').select('id, nome, nivel').eq('professor_id', professorId).then(({ data }) => {
@@ -29,13 +31,16 @@ export function MinhasTurmas({ professorId }) {
     setTentativaAberta(null)
     setAbaTurma('correcao')
     setSecaoMaterial(null)
+    setBusca('')
 
     const { data: prog } = await supabase.from('turma_progresso').select('licao_atual').eq('turma_id', turma.id).maybeSingle()
     setProgresso(prog)
 
-    const { data: mats } = await supabase.from('matriculas').select('cliente_id, clientes(nome)').eq('turma_id', turma.id).eq('status', 'ativa')
+    const { data: mats } = await supabase.from('matriculas').select('id, cliente_id, clientes(nome)').eq('turma_id', turma.id).eq('status', 'ativa')
     const clienteIds = (mats || []).map((m) => m.cliente_id)
+    const matriculaIds = (mats || []).map((m) => m.id)
     const nomesPorCliente = Object.fromEntries((mats || []).map((m) => [m.cliente_id, m.clientes?.nome || '—']))
+    const nomesPorMatricula = Object.fromEntries((mats || []).map((m) => [m.id, m.clientes?.nome || '—']))
 
     const { data: tents } = await supabase.from('tentativas').select('*').in('cliente_id', clienteIds.length ? clienteIds : [-1])
     const exIds = [...new Set((tents || []).map((t) => t.exercicio_id))]
@@ -44,6 +49,36 @@ export function MinhasTurmas({ professorId }) {
 
     setExerciciosPorId(exMap)
     setTentativas((tents || []).map((t) => ({ ...t, aluno_nome: nomesPorCliente[t.cliente_id] })))
+
+    const { data: freq } = await supabase
+      .from('frequencia')
+      .select('presente, avaliacao, nota, matricula_id, aulas(data)')
+      .in('matricula_id', matriculaIds.length ? matriculaIds : [-1])
+    setFrequencia((freq || []).map((f) => ({ ...f, aluno_nome: nomesPorMatricula[f.matricula_id] })))
+  }
+
+  function exportarCSV() {
+    const linhas = [['Aluno', 'Data', 'Presença', 'Avaliação', 'Nota']]
+    frequencia
+      .slice()
+      .sort((a, b) => (a.aluno_nome || '').localeCompare(b.aluno_nome || ''))
+      .forEach((f) => {
+        linhas.push([
+          f.aluno_nome || '',
+          f.aulas?.data || '',
+          f.presente === 1 ? 'Presente' : 'Ausente',
+          f.avaliacao || '',
+          f.nota ?? '',
+        ])
+      })
+    const csv = linhas.map((linha) => linha.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `frequencia-${turmaSel.nome.replace(/\s+/g, '_')}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   if (carregando) return <Carregando />
@@ -77,13 +112,21 @@ export function MinhasTurmas({ professorId }) {
     )
   }
 
-  const pendentes = tentativas.filter((t) => t.status === 'pendente')
-  const corrigidas = tentativas.filter((t) => t.status !== 'pendente')
+  const buscaLower = busca.trim().toLowerCase()
+  const filtrar = (t) => !buscaLower || (t.aluno_nome || '').toLowerCase().includes(buscaLower)
+  const pendentes = tentativas.filter((t) => t.status === 'pendente').filter(filtrar)
+  const corrigidas = tentativas.filter((t) => t.status !== 'pendente').filter(filtrar)
 
   return (
     <div className="space-y-6">
       <button onClick={() => setTurmaSel(null)} className="text-sm text-ink-soft hover:text-ink transition">← Classes</button>
-      <h2 className="font-display text-lg font-semibold text-ink">{turmaSel.nome}</h2>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h2 className="font-display text-lg font-semibold text-ink">{turmaSel.nome}</h2>
+        <button onClick={exportarCSV} disabled={frequencia.length === 0}
+          className="pressionavel flex items-center gap-1.5 text-xs font-medium bg-paper text-navy px-3 py-2 rounded-lg hover:bg-line disabled:opacity-40 transition">
+          <Download size={13} /> Export attendance (CSV)
+        </button>
+      </div>
 
       <div className="inline-flex bg-paper border border-line rounded-full p-1">
         <button
@@ -110,6 +153,12 @@ export function MinhasTurmas({ professorId }) {
 
       {abaTurma === 'correcao' && (
         <>
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Search student..."
+              className="w-full border border-line rounded-lg pl-9 pr-3 py-2 text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-amber/50" />
+          </div>
+
           <div>
             <h3 className="text-sm font-semibold text-ink-soft uppercase tracking-wide mb-2">Pending ({pendentes.length})</h3>
             {pendentes.length === 0 && <p className="text-sm text-ink-faint">Nothing pending.</p>}
