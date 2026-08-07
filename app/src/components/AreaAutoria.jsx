@@ -7,9 +7,10 @@ import { LivrosGrid, NIVEIS } from './LivrosGrid'
 import { LicoesGrid } from './LicoesGrid'
 import { EditarMaterial } from './EditarMaterial'
 import { EditarLicoesLista } from './EditarLicoesLista'
+import { PainelAnalytics } from './PainelAnalytics'
 import { Carregando } from './Carregando'
 import { useAuth } from '../context/AuthContext'
-import { BookOpen, Rocket, LogOut, ChevronLeft, FileEdit } from 'lucide-react'
+import { BookOpen, Rocket, LogOut, ChevronLeft, FileEdit, BarChart3 } from 'lucide-react'
 import logoBranco from '../assets/logo-branco.png'
 
 export function AreaAutoria() {
@@ -96,6 +97,16 @@ export function AreaAutoria() {
             <Rocket size={17} strokeWidth={2} />
             <span className="hidden md:inline">Progresso</span>
           </button>
+          <button
+            onClick={() => setAba('analytics')}
+            className={`relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+              aba === 'analytics' ? 'bg-white/[0.08] text-white' : 'text-white/50 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {aba === 'analytics' && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-amber rounded-full" />}
+            <BarChart3 size={17} strokeWidth={2} />
+            <span className="hidden md:inline">Analytics</span>
+          </button>
         </nav>
 
         <div className="px-3 pb-4 hidden md:block">
@@ -143,6 +154,12 @@ export function AreaAutoria() {
             <p className="text-ink-soft text-sm mt-1">Consulta do que já foi liberado — o controle de verdade agora é feito pela Chamada no Gestão.</p>
           </div>
         )}
+        {aba === 'analytics' && (
+          <div className="mb-8">
+            <h1 className="font-display text-2xl md:text-[28px] font-semibold text-ink tracking-tight">Analytics</h1>
+            <p className="text-ink-soft text-sm mt-1">Visão geral de uso do app de exercícios.</p>
+          </div>
+        )}
 
         {aba === 'criar' && !nivelSel && (
           <LivrosGrid livros={livros} onSelecionar={(l) => setNivelSel(l.nivel)} />
@@ -178,6 +195,8 @@ export function AreaAutoria() {
         {aba === 'editar-licoes' && <EditarLicoesLista onSelecionar={irEditarLicao} />}
 
         {aba === 'progresso' && <ProgressoTurmas />}
+
+        {aba === 'analytics' && <PainelAnalytics />}
       </main>
     </div>
   )

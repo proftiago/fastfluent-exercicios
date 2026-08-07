@@ -1,14 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { Login } from './components/Login'
-import { AreaAutoria } from './components/AreaAutoria'
-import { AreaAluno } from './components/AreaAluno'
-import { AreaProfessor } from './components/AreaProfessor'
+import { RedefinirSenha } from './components/RedefinirSenha'
 import { supabase } from './lib/supabaseClient'
+import { ErroGeral } from './components/ErroGeral'
+import { SemInternet } from './components/SemInternet'
+
+const AreaAutoria = lazy(() => import('./components/AreaAutoria').then((m) => ({ default: m.AreaAutoria })))
+const AreaAluno = lazy(() => import('./components/AreaAluno').then((m) => ({ default: m.AreaAluno })))
+const AreaProfessor = lazy(() => import('./components/AreaProfessor').then((m) => ({ default: m.AreaProfessor })))
+
+function CarregandoTela() {
+  return <div className="min-h-screen flex items-center justify-center text-ink-soft text-sm">Carregando...</div>
+}
 
 function AppContent() {
-  const { session, loading } = useAuth()
+  const { session, loading, recuperandoSenha } = useAuth()
   const [ehAutor, setEhAutor] = useState(null)
   const [ehProfessor, setEhProfessor] = useState(null)
 
@@ -24,22 +32,30 @@ function AppContent() {
       .then(({ data }) => setEhProfessor(!!data))
   }, [session])
 
+  if (recuperandoSenha) return <RedefinirSenha />
+
   if (loading || (session && (ehAutor === null || ehProfessor === null))) {
-    return <div className="min-h-screen flex items-center justify-center text-ink-soft">Carregando...</div>
+    return <CarregandoTela />
   }
 
   if (!session) return <Login />
-  if (ehAutor) return <AreaAutoria />
-  if (ehProfessor) return <AreaProfessor />
-  return <AreaAluno />
+
+  return (
+    <Suspense fallback={<CarregandoTela />}>
+      {ehAutor ? <AreaAutoria /> : ehProfessor ? <AreaProfessor /> : <AreaAluno />}
+    </Suspense>
+  )
 }
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ThemeProvider>
+    <ErroGeral>
+      <ThemeProvider>
+        <AuthProvider>
+          <SemInternet />
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErroGeral>
   )
 }
