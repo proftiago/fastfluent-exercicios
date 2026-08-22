@@ -16,12 +16,15 @@ import { LogOut, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, F
 import { Carregando } from './Carregando'
 import logoBranco from '../assets/logo-branco.png'
 
+// Todas as 18 lições de um livro ficam liberadas de uma vez (o aluno pode navegar o
+// livro inteiro), mas "atual"/"onde parei" precisa usar a lição REAL sendo dada
+// pelo professor (turma_progresso.licao_atual), não a última liberada.
 function montarLicoes(livro) {
   return Array.from({ length: 18 }, (_, i) => {
     const numero = i + 1
     const liberada = livro.licoes.includes(numero)
-    const maisRecente = liberada && numero === Math.max(...livro.licoes)
-    return { numero, atual: maisRecente, concluida: liberada && !maisRecente, bloqueada: !liberada }
+    const atual = liberada && numero === livro.licaoAtual
+    return { numero, atual, concluida: liberada && numero < livro.licaoAtual, bloqueada: !liberada }
   })
 }
 
@@ -80,6 +83,13 @@ export function AreaAluno() {
         ? await supabase.from('turma_licoes_liberadas').select('turma_id, nivel, licao').in('turma_id', turmaIds)
         : { data: [] }
 
+      // Lição REAL que está sendo dada agora em cada turma (não confundir com
+      // "liberada pra navegar", que já vem todas de uma vez)
+      const { data: progresso } = turmaIds.length
+        ? await supabase.from('turma_progresso').select('turma_id, licao_atual').in('turma_id', turmaIds)
+        : { data: [] }
+      const licaoAtualPorTurma = Object.fromEntries((progresso || []).map((p) => [p.turma_id, p.licao_atual]))
+
       const gruposMapa = {}
       ;(liberadas || []).forEach((l) => {
         const chave = `${l.turma_id}-${l.nivel}`
@@ -90,6 +100,7 @@ export function AreaAluno() {
             turmaId: l.turma_id,
             idioma: mat?.turmas?.idioma,
             licoes: [],
+            licaoAtual: licaoAtualPorTurma[l.turma_id] || 1,
           }
         }
         gruposMapa[chave].licoes.push(l.licao)
@@ -102,7 +113,7 @@ export function AreaAluno() {
       // Comemoração de livro completo — baseado na Lição 18 ter sido DADA de
       // verdade (existe aula registrada), não só "liberada pra ver" no app
       for (const livro of listaLivros) {
-        if (!livro.licoes.includes(18)) continue
+        if (livro.licaoAtual < 18) continue
         const { count } = await supabase
           .from('aulas')
           .select('id', { count: 'exact', head: true })
@@ -126,15 +137,15 @@ export function AreaAluno() {
     nivel: l.nivel,
     subtitulo: l.idioma,
     bloqueado: false,
-    progresso: Math.round((l.licoes.length / 18) * 100),
+    progresso: Math.round((l.licaoAtual / 18) * 100),
     _livro: l,
   }))
 
-  const livroEmAndamento = livros.find((l) => l.licoes.length > 0 && l.licoes.length < 18) || livros[0]
+  const livroEmAndamento = livros.find((l) => l.licaoAtual > 0 && l.licaoAtual < 18) || livros[0]
 
   function continuarDeOndeParei() {
     if (!livroEmAndamento) return
-    const numeroAtual = Math.max(...livroEmAndamento.licoes)
+    const numeroAtual = livroEmAndamento.licaoAtual
     const indiceBloco = Math.floor((numeroAtual - 1) / 3)
     const inicio = indiceBloco * 3
     const licoesDoLivro = montarLicoes(livroEmAndamento)
@@ -300,7 +311,7 @@ export function AreaAluno() {
               </div>
             )}
 
-            {!carregando && clienteId && naTelaInicial && livroEmAndamento && livroEmAndamento.licoes.length > 0 && (
+            {!carregando && clienteId && naTelaInicial && livroEmAndamento && livroEmAndamento.licaoAtual > 0 && (
               <button onClick={continuarDeOndeParei}
                 className="pressionavel w-full flex items-center gap-3 bg-surface border border-line rounded-2xl px-4 py-3.5 mb-6 hover:border-amber/40 hover:shadow-card transition text-left animar-entrada">
                 <div className="w-10 h-10 rounded-xl bg-amber-soft flex items-center justify-center shrink-0">
@@ -309,7 +320,7 @@ export function AreaAluno() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-ink">Continue where you left off</p>
                   <p className="text-xs text-ink-soft mt-0.5">
-                    {livroEmAndamento.nivel} · Lesson {String(Math.max(...livroEmAndamento.licoes)).padStart(2, '0')}
+                    {livroEmAndamento.nivel} · Lesson {String(livroEmAndamento.licaoAtual).padStart(2, '0')}
                   </p>
                 </div>
               </button>
