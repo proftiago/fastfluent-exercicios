@@ -74,13 +74,8 @@ function EditorParte({ parte, atualizar, nivel, licao }) {
   async function buscarImagem(item) {
     setBuscandoId(item.id)
     try {
-      const resp = await fetch('https://kockwinynfpaenxmzagu.supabase.co/functions/v1/buscar-imagem', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: item.texto }),
-      })
-      const dados = await resp.json()
-      if (resp.ok) setResultadosBusca((prev) => ({ ...prev, [item.id]: dados.resultados || [] }))
+      const { data: dados, error } = await supabase.functions.invoke('buscar-imagem', { body: { query: item.texto } })
+      if (!error) setResultadosBusca((prev) => ({ ...prev, [item.id]: dados.resultados || [] }))
     } catch (e) {
       console.error(e)
     } finally {

@@ -28,7 +28,7 @@ export function LivrosGrid({ livros, onSelecionar }) {
           )}
 
           <div className="absolute bottom-0 left-0 right-0 p-3">
-            <p className="font-mono text-[10px] text-amber uppercase tracking-wide">Livro</p>
+            <p className="font-mono text-[10px] text-[#F2B33D] uppercase tracking-wide">Livro</p>
             <p className="font-display text-sm font-bold text-white leading-tight">{l.nivel}</p>
             {l.subtitulo && <p className="text-[11px] text-white/60 mt-0.5">{l.subtitulo}</p>}
             {typeof l.progresso === 'number' && (

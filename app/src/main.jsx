@@ -9,8 +9,15 @@ Sentry.init({
   environment: import.meta.env.MODE,
 })
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const root = createRoot(document.getElementById('root'))
+const preview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview')
+
+if (preview) {
+  import('./dev/PreviewTemas').then(({ PreviewTemas }) => root.render(<PreviewTemas tema={preview} />))
+} else {
+  root.render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+}

@@ -28,6 +28,73 @@
   --color-amber-soft: rgba(239, 160, 54, 0.16);
   --color-teal-soft: rgba(39, 155, 135, 0.16);
 }
+/* Temas da área do aluno — aplicados no contêiner da AreaAluno via data-tema,
+   pra não mudar a cara da área do professor/autor.
+   escuro = "Órbita" (padrão), claro = "Caderno", kids = "Trilha". */
+[data-tema="escuro"] {
+  --color-paper: #0A1230;
+  --color-surface: #131C42;
+  --color-ink: #EEF1FA;
+  --color-ink-soft: #A9B3D1;
+  --color-ink-faint: #8C96B8;
+  --color-navy: #1D2A5C;
+  --color-navy-deep: #0E1739;
+  --color-amber: #F2B33D;
+  --color-amber-soft: rgba(242, 179, 61, 0.14);
+  --color-teal: #4FD1B5;
+  --color-teal-soft: rgba(79, 209, 181, 0.14);
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line-strong: rgba(255, 255, 255, 0.16);
+  --font-display: "Sora", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+[data-tema="escuro"] .text-navy { color: var(--color-ink); }
+
+[data-tema="claro"] {
+  --color-paper: #F6F3EC;
+  --color-surface: #FFFFFF;
+  --color-ink: #14213D;
+  --color-ink-soft: #545A6A;
+  --color-ink-faint: #767B88;
+  --color-navy: #1B2A52;
+  --color-navy-deep: #0E1733;
+  --color-amber: #C8962E;
+  --color-amber-soft: #F3E4BF;
+  --color-teal: #1F7F6D;
+  --color-teal-soft: #DCEFEA;
+  --color-line: #E2DDD1;
+  --color-line-strong: #CFC9BB;
+  --font-display: "Fraunces", serif;
+  --font-body: "Inter", sans-serif;
+}
+/* dourado como TEXTO precisa ser mais escuro pra ter contraste no papel claro */
+[data-tema="claro"] .text-amber { color: #8A6A1F; }
+
+[data-tema="kids"] {
+  --color-paper: #EEF2FF;
+  --color-surface: #FFFFFF;
+  --color-ink: #0F1B4C;
+  --color-ink-soft: #4A5786;
+  --color-ink-faint: #6E7AA6;
+  --color-navy: #1E40D8;
+  --color-navy-deep: #15309F;
+  --color-amber: #FFC23D;
+  --color-amber-soft: #FFF1CC;
+  --color-teal: #2BB673;
+  --color-teal-soft: #DDF6E9;
+  --color-line: #DCE3FA;
+  --color-line-strong: #C3CEF5;
+  --font-display: "Nunito", sans-serif;
+  --font-body: "Nunito", sans-serif;
+}
+[data-tema="kids"] .text-amber { color: #9A6200; }
+[data-tema="kids"] .text-teal { color: #14804F; }
+[data-tema="kids"] { font-family: var(--font-body); font-weight: 600; }
+/* botões "gordinhos" estilo jogo */
+[data-tema="kids"] .botao-3d { border-bottom-width: 5px; }
+[data-tema="kids"] .rounded-2xl { border-radius: 1.25rem; }
+[data-tema] { font-family: var(--font-body); color: var(--color-ink); }
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);

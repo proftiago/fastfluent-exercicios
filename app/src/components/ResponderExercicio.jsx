@@ -34,10 +34,9 @@ export function ResponderExercicio({ exercicio, clienteId, onEnviado, onCancelar
       return
     }
 
-    fetch('https://kockwinynfpaenxmzagu.supabase.co/functions/v1/notificar-professor', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ exercicio_id: exercicio.id, cliente_id: clienteId }),
+    // invoke manda o login do aluno junto (a função recusa chamada anônima)
+    supabase.functions.invoke('notificar-professor', {
+      body: { exercicio_id: exercicio.id, cliente_id: clienteId },
     }).catch(() => {})
 
     let atividade = null

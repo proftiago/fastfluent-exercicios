@@ -4,7 +4,6 @@ import { UserX } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { ListaExercicios } from './ListaExercicios'
-import { LivrosGrid } from './LivrosGrid'
 import { BlocosLicoes } from './BlocosLicoes'
 import { LicoesGrid } from './LicoesGrid'
 import { MenuSecoesLicaoAluno } from './MenuSecoesLicaoAluno'
@@ -12,9 +11,11 @@ import { NavTopo } from './NavTopo'
 import { Configuracoes } from './Configuracoes'
 import { HistoricoAluno } from './HistoricoAluno'
 import { Comemoracao } from './Comemoracao'
-import { LogOut, Settings, Camera, BookOpenText, ListChecks, Rocket, Sparkles, Flame, Star, User, CalendarCheck, PlayCircle } from 'lucide-react'
+import { LogOut, BookOpenText, ListChecks, Rocket, Flame, Star, User, CalendarCheck } from 'lucide-react'
 import { Carregando } from './Carregando'
 import logoBranco from '../assets/logo-branco.png'
+import { useTemaAluno, temaPadraoPorFaixa } from '../context/TemaAluno'
+import { InicioOrbita, InicioCaderno, InicioTrilha } from './InicioAluno'
 
 // Todas as 18 lições de um livro ficam liberadas de uma vez (o aluno pode navegar o
 // livro inteiro), mas "atual"/"onde parei" precisa usar a lição REAL sendo dada
@@ -30,6 +31,7 @@ function montarLicoes(livro) {
 
 export function AreaAluno() {
   const { session, signOut } = useAuth()
+  const { tema, escolher: escolherTema, definirPadrao: definirTemaPadrao } = useTemaAluno()
   const [clienteId, setClienteId] = useState(null)
   const [nomeAluno, setNomeAluno] = useState('')
   const [avatarUrl, setAvatarUrl] = useState(null)
@@ -73,11 +75,12 @@ export function AreaAluno() {
 
       const { data: mats } = await supabase
         .from('matriculas')
-        .select('id, turma_id, status, turmas(nome, idioma)')
+        .select('id, turma_id, status, turmas(nome, idioma, faixa_etaria)')
         .eq('cliente_id', conta.cliente_id)
         .eq('status', 'ativa')
 
       const turmaIds = (mats || []).map((m) => m.turma_id).filter(Boolean)
+      definirTemaPadrao(temaPadraoPorFaixa((mats || []).map((m) => m.turmas?.faixa_etaria)))
 
       const { data: liberadas } = turmaIds.length
         ? await supabase.from('turma_licoes_liberadas').select('turma_id, nivel, licao').in('turma_id', turmaIds)
@@ -133,27 +136,22 @@ export function AreaAluno() {
     carregar()
   }, [session])
 
-  const livrosParaGrid = livros.map((l) => ({
-    nivel: l.nivel,
-    subtitulo: l.idioma,
-    bloqueado: false,
-    progresso: Math.round((l.licaoAtual / 18) * 100),
-    _livro: l,
-  }))
-
   const livroEmAndamento = livros.find((l) => l.licaoAtual > 0 && l.licaoAtual < 18) || livros[0]
+
+  function abrirLicao(livro, numero) {
+    const indiceBloco = Math.floor((numero - 1) / 3)
+    const inicio = indiceBloco * 3
+    const licoesDoLivro = montarLicoes(livro)
+    setLivroSel(livro)
+    setBlocoSel({ numero: indiceBloco + 1, inicio: inicio + 1, fim: inicio + 3, trio: licoesDoLivro.slice(inicio, inicio + 3) })
+    setLicaoSel(numero)
+    setAbaLicao('conteudo')
+    setSecaoSel(null)
+  }
 
   function continuarDeOndeParei() {
     if (!livroEmAndamento) return
-    const numeroAtual = livroEmAndamento.licaoAtual
-    const indiceBloco = Math.floor((numeroAtual - 1) / 3)
-    const inicio = indiceBloco * 3
-    const licoesDoLivro = montarLicoes(livroEmAndamento)
-    setLivroSel(livroEmAndamento)
-    setBlocoSel({ numero: indiceBloco + 1, inicio: inicio + 1, fim: inicio + 3, trio: licoesDoLivro.slice(inicio, inicio + 3) })
-    setLicaoSel(numeroAtual)
-    setAbaLicao('conteudo')
-    setSecaoSel(null)
+    abrirLicao(livroEmAndamento, livroEmAndamento.licaoAtual)
   }
 
   function irParaAprender() {
@@ -205,14 +203,14 @@ export function AreaAluno() {
     : livroSel?.nivel
 
   return (
-    <div className="min-h-screen bg-paper pb-20">
+    <div data-tema={tema} className="min-h-screen bg-paper pb-20">
       <header className="bg-navy">
         <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center gap-2">
           <button onClick={irParaHome} className="flex items-center shrink-0">
             <img src={logoBranco} alt="Fast Fluent" className="h-6 w-auto" />
           </button>
 
-          {clienteId && (
+          {clienteId && tema !== 'kids' && (
             <div className="flex items-center gap-1.5 shrink-0">
               <div className="flex items-center gap-1 bg-white/10 rounded-full px-2.5 py-1">
                 <Flame size={13} className="text-amber" />
@@ -253,7 +251,7 @@ export function AreaAluno() {
                 <p className="text-[10px] text-ink-soft">best streak</p>
               </div>
             </div>
-            <Configuracoes avatarUrl={avatarUrl} onAvatarAtualizado={setAvatarUrl} />
+            <Configuracoes avatarUrl={avatarUrl} onAvatarAtualizado={setAvatarUrl} temaAluno={tema} onTemaAluno={escolherTema} />
           </div>
         ) : telaAtiva === 'historico' ? (
           <div>
@@ -269,73 +267,20 @@ export function AreaAluno() {
             )}
 
             {!carregando && clienteId && naTelaInicial && (
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-navy-deep p-6 mb-4 shadow-card-amber animar-entrada">
-                <Sparkles size={16} className="absolute top-5 right-6 text-amber/40" />
-                <Sparkles size={10} className="absolute top-14 right-16 text-white/20" />
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-white/10 overflow-hidden flex items-center justify-center shrink-0 border-2 border-amber/40">
-                    {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={18} className="text-white/50" />}
-                  </div>
-                  <div>
-                    <p className="font-display text-lg font-bold text-white leading-tight">
-                      {primeiroNome ? `Hi, ${primeiroNome}!` : 'Welcome!'}
-                    </p>
-                    <p className="text-xs text-white/60 mt-0.5">Keep your journey going.</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2 bg-white/[0.06] rounded-2xl px-4 py-3">
-                    <Rocket size={18} className="text-amber shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-white">{totalLicoes}</p>
-                      <p className="text-[11px] text-white/50">{totalLicoes === 1 ? 'lesson' : 'lessons'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white/[0.06] rounded-2xl px-4 py-3">
-                    <Flame size={18} className="text-amber shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-white">{streak} {streak === 1 ? 'day' : 'days'}</p>
-                      <p className="text-[11px] text-white/50">streak</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!carregando && clienteId && naTelaInicial && streakEmRisco && (
-              <div className="animar-entrada flex items-center gap-3 bg-amber-soft border border-amber/30 rounded-2xl px-4 py-3 mb-4">
-                <Flame size={20} className="text-amber shrink-0" />
-                <p className="text-xs text-amber flex-1">
-                  Your <strong>{streak}-day streak</strong> is about to end! Do an exercise today to keep it going.
-                </p>
-              </div>
-            )}
-
-            {!carregando && clienteId && naTelaInicial && livroEmAndamento && livroEmAndamento.licaoAtual > 0 && (
-              <button onClick={continuarDeOndeParei}
-                className="pressionavel w-full flex items-center gap-3 bg-surface border border-line rounded-2xl px-4 py-3.5 mb-6 hover:border-amber/40 hover:shadow-card transition text-left animar-entrada">
-                <div className="w-10 h-10 rounded-xl bg-amber-soft flex items-center justify-center shrink-0">
-                  <PlayCircle size={19} className="text-amber" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-ink">Continue where you left off</p>
-                  <p className="text-xs text-ink-soft mt-0.5">
-                    {livroEmAndamento.nivel} · Lesson {String(livroEmAndamento.licaoAtual).padStart(2, '0')}
-                  </p>
-                </div>
-              </button>
-            )}
-
-            {!carregando && clienteId && naTelaInicial && (
               livros.length === 0
                 ? <EstadoVazio titulo="No lessons here yet" descricao="As soon as your class moves forward, lessons will show up here." />
-                : (
-                  <div className="animar-entrada">
-                    <h2 className="font-display text-lg font-semibold text-ink mb-1">Your books</h2>
-                    <p className="text-sm text-ink-soft mb-4">Choose a book.</p>
-                    <LivrosGrid livros={livrosParaGrid} onSelecionar={(l) => setLivroSel(l._livro)} />
-                  </div>
-                )
+                : (() => {
+                    const props = {
+                      primeiroNome, avatarUrl, streak, xp, totalLicoes, livros, livroEmAndamento, streakEmRisco,
+                      onContinuar: continuarDeOndeParei,
+                      onAbrirLivro: setLivroSel,
+                      onAbrirLicao: abrirLicao,
+                      licoesDoLivro: montarLicoes,
+                    }
+                    if (tema === 'kids') return <InicioTrilha {...props} />
+                    if (tema === 'claro') return <InicioCaderno {...props} />
+                    return <InicioOrbita {...props} />
+                  })()
             )}
 
             {livroSel && (

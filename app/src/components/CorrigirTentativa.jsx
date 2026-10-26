@@ -34,11 +34,7 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
     setSalvando(false)
     if (error) { setErro(`Error saving: ${error.message}`); return }
 
-    fetch('https://kockwinynfpaenxmzagu.supabase.co/functions/v1/notificar-aluno', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tentativa_id: tentativa.id }),
-    }).catch(() => {})
+    supabase.functions.invoke('notificar-aluno', { body: { tentativa_id: tentativa.id } }).catch(() => {})
 
     onCorrigido?.()
   }

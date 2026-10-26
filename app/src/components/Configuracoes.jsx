@@ -2,9 +2,15 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { Sun, Moon, Camera, Loader2 } from 'lucide-react'
+import { Sun, Moon, Camera, Loader2, Smile } from 'lucide-react'
 
-export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_contas' }) {
+const OPCOES_TEMA_ALUNO = [
+  { valor: 'escuro', rotulo: 'Dark', Icone: Moon },
+  { valor: 'claro', rotulo: 'Light', Icone: Sun },
+  { valor: 'kids', rotulo: 'Kids', Icone: Smile },
+]
+
+export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_contas', temaAluno, onTemaAluno }) {
   const { session } = useAuth()
   const { tema, alternar } = useTheme()
 
@@ -132,24 +138,37 @@ export function Configuracoes({ avatarUrl, onAvatarAtualizado, tabela = 'aluno_c
 
       <div className="bg-surface rounded-2xl border border-line p-6">
         <h2 className="font-display text-base font-semibold text-ink mb-4">Appearance</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => tema !== 'claro' && alternar()}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium border transition ${
-              tema === 'claro' ? 'border-navy bg-navy text-white' : 'border-line text-ink-soft hover:border-navy/30'
-            }`}
-          >
-            <Sun size={15} /> Light
-          </button>
-          <button
-            onClick={() => tema !== 'escuro' && alternar()}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium border transition ${
-              tema === 'escuro' ? 'border-navy bg-navy text-white' : 'border-line text-ink-soft hover:border-navy/30'
-            }`}
-          >
-            <Moon size={15} /> Dark
-          </button>
-        </div>
+        {temaAluno ? (
+          <div className="grid grid-cols-3 gap-2">
+            {OPCOES_TEMA_ALUNO.map(({ valor, rotulo, Icone }) => (
+              <button key={valor} onClick={() => onTemaAluno(valor)}
+                className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium border transition ${
+                  temaAluno === valor ? 'border-navy bg-navy text-white' : 'border-line text-ink-soft hover:border-navy/30'
+                }`}>
+                <Icone size={15} /> {rotulo}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              onClick={() => tema !== 'claro' && alternar()}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium border transition ${
+                tema === 'claro' ? 'border-navy bg-navy text-white' : 'border-line text-ink-soft hover:border-navy/30'
+              }`}
+            >
+              <Sun size={15} /> Light
+            </button>
+            <button
+              onClick={() => tema !== 'escuro' && alternar()}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium border transition ${
+                tema === 'escuro' ? 'border-navy bg-navy text-white' : 'border-line text-ink-soft hover:border-navy/30'
+              }`}
+            >
+              <Moon size={15} /> Dark
+            </button>
+          </div>
+        )}
       </div>
 
       <form onSubmit={trocarSenha} className="bg-surface rounded-2xl border border-line p-6 space-y-3">
