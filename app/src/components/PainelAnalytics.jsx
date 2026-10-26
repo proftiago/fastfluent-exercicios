@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { Carregando } from './Carregando'
 import { Users, Flame, ListChecks, BookOpenText, TrendingUp } from 'lucide-react'
+import { dataLocal } from '../lib/datas'
 
 export function PainelAnalytics() {
   const [carregando, setCarregando] = useState(true)
@@ -14,7 +15,7 @@ export function PainelAnalytics() {
 
       const { count: totalAlunos } = await supabase.from('aluno_contas').select('id', { count: 'exact', head: true })
 
-      const seteDiasAtras = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      const seteDiasAtras = dataLocal(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
       const { count: alunosAtivos } = await supabase.from('aluno_contas').select('id', { count: 'exact', head: true }).gte('ultima_atividade', seteDiasAtras)
 
       const { count: totalTentativas } = await supabase.from('tentativas').select('id', { count: 'exact', head: true })

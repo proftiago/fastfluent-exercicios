@@ -16,6 +16,7 @@ import { Carregando } from './Carregando'
 import logoBranco from '../assets/logo-branco.png'
 import { useTemaAluno, temaPadraoPorFaixa } from '../context/TemaAluno'
 import { InicioOrbita, InicioCaderno, InicioTrilha } from './InicioAluno'
+import { dataLocal } from '../lib/datas'
 
 // Todas as 18 lições de um livro ficam liberadas de uma vez (o aluno pode navegar o
 // livro inteiro), mas "atual"/"onde parei" precisa usar a lição REAL sendo dada
@@ -69,7 +70,7 @@ export function AreaAluno() {
       if (conta.streak_atual > 0 && conta.ultima_atividade) {
         const ontem = new Date()
         ontem.setDate(ontem.getDate() - 1)
-        const ontemStr = ontem.toISOString().slice(0, 10)
+        const ontemStr = dataLocal(ontem)
         setStreakEmRisco(conta.ultima_atividade === ontemStr)
       }
 

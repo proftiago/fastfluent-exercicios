@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 import { Carregando } from './Carregando'
 import { EstadoVazio } from './EstadoVazio'
 import { Printer, CheckCircle2, XCircle, Calendar } from 'lucide-react'
+import { lerData } from '../lib/datas'
 
 export function HistoricoAluno({ clienteId, nomeAluno }) {
   const [registros, setRegistros] = useState([])
@@ -82,7 +83,7 @@ export function HistoricoAluno({ clienteId, nomeAluno }) {
             )}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-ink">
-                {new Date(r.aulas.data).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+                {lerData(r.aulas.data).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
               </p>
               <p className="text-xs text-ink-soft font-mono mt-0.5">
                 {r.aulas.nivel} · Lesson {String(r.aulas.licao).padStart(2, '0')}
@@ -119,7 +120,7 @@ function DeclaracaoModal({ nomeAluno, registros, totalAulas, totalPresencas, per
   const turmaNome = registros[0]?.turma?.nome
 
   function formatarData(d) {
-    return d ? new Date(d).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'
+    return d ? lerData(d).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'
   }
 
   return (
