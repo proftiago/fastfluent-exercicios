@@ -83,9 +83,9 @@ export function InicioCaderno({ primeiroNome, avatarUrl, streak, xp, totalLicoes
         </button>
       )}
 
-      <div className={`grid gap-2.5 mb-6 animar-entrada ${atalhos.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`} role="list">
+      <div className={`grid gap-2.5 mb-6 animar-entrada ${atalhos.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
         {atalhos.map(({ nome, Icone, acao }) => (
-          <button key={nome} role="listitem" onClick={acao}
+          <button key={nome} onClick={acao}
             className="pressionavel aspect-square rounded-2xl bg-surface shadow-card flex flex-col items-center justify-center gap-2">
             <Icone size={24} className="text-ink" />
             <span className="text-[12px] font-medium text-ink">{nome}</span>

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
+import { AudioResposta } from './AudioResposta'
+
 export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancelar }) {
   const itensBase = exercicio.tipo === 'criar_perguntas' ? exercicio.conteudo.respostas : exercicio.conteudo.perguntas
 
@@ -55,7 +57,9 @@ export function CorrigirTentativa({ tentativa, exercicio, onCorrigido, onCancela
               <p className="text-xs font-medium text-ink-soft">
                 {i + 1}. {exercicio.tipo === 'criar_perguntas' ? item.resposta : item.pergunta}
               </p>
+              {item.imagem_url && <img src={item.imagem_url} alt="" className="w-full max-h-40 object-cover rounded-lg" />}
               <p className="text-sm text-ink bg-paper rounded px-2 py-1.5">{respostaAluno}</p>
+              <AudioResposta caminho={tentativa.resposta?.itens?.find((x) => x.id === item.id)?.audio} />
               <input
                 value={comentarios[item.id]}
                 onChange={(e) => setComentarios((prev) => ({ ...prev, [item.id]: e.target.value }))}

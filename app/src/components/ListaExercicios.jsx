@@ -3,12 +3,13 @@ import { EstadoVazio } from './EstadoVazio'
 import { ListChecks } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { ResponderExercicio } from './ResponderExercicio'
+import { DesafioFluencia } from './DesafioFluencia'
 import { VisualizarTentativa } from './VisualizarTentativa'
 import { Comemoracao } from './Comemoracao'
-import { MessageCircleQuestion, BookOpenText, Shuffle, CheckCircle2, Clock } from 'lucide-react'
+import { MessageCircleQuestion, BookOpenText, Shuffle, CheckCircle2, Clock, Mic } from 'lucide-react'
 import { Carregando } from './Carregando'
 
-const ICONES = { perguntas_respostas: MessageCircleQuestion, interpretacao_texto: BookOpenText, criar_perguntas: Shuffle }
+const ICONES = { perguntas_respostas: MessageCircleQuestion, interpretacao_texto: BookOpenText, criar_perguntas: Shuffle, fluencia: Mic }
 
 export function ListaExercicios({ clienteId, nivel, licao }) {
   const [exercicios, setExercicios] = useState([])
@@ -122,6 +123,8 @@ export function ListaExercicios({ clienteId, nivel, licao }) {
                   <div className="px-5 pb-5">
                     {tentativa ? (
                       <VisualizarTentativa exercicio={ex} tentativa={tentativa} />
+                    ) : ex.tipo === 'fluencia' ? (
+                      <DesafioFluencia exercicio={ex} clienteId={clienteId} onEnviado={handleEnviado} onCancelar={() => setAbertoId(null)} />
                     ) : (
                       <ResponderExercicio
                         exercicio={ex}

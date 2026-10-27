@@ -6,6 +6,7 @@ const TIPOS = [
   { valor: 'perguntas_respostas', label: 'Perguntas e respostas' },
   { valor: 'interpretacao_texto', label: 'Interpretação de texto' },
   { valor: 'criar_perguntas', label: 'Criar perguntas (a partir de respostas)' },
+  { valor: 'fluencia', label: 'Desafio de fluência (o aluno fala)' },
 ]
 
 export function CriarExercicio({ turmas, nivelFixo, licaoFixa, exercicioEditando, onCancelarEdicao, onCriado }) {
@@ -15,7 +16,9 @@ export function CriarExercicio({ turmas, nivelFixo, licaoFixa, exercicioEditando
   const [turmaId, setTurmaId] = useState('')
   const [prazo, setPrazo] = useState('')
   const [texto, setTexto] = useState('')
-  const [itens, setItens] = useState([{ id: cryptoId(), valor: '' }])
+  const [itens, setItens] = useState([{ id: cryptoId(), valor: '', imagem: '' }])
+  const [segundos, setSegundos] = useState(15)
+  const [buscaImagem, setBuscaImagem] = useState({})
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState(null)
 
@@ -28,19 +31,28 @@ export function CriarExercicio({ turmas, nivelFixo, licaoFixa, exercicioEditando
     setTurmaId(exercicioEditando.turma_id || '')
     setPrazo(exercicioEditando.prazo || '')
     setTexto(exercicioEditando.conteudo?.texto || '')
+    setSegundos(exercicioEditando.conteudo?.segundos || 15)
     const listaBase =
       exercicioEditando.tipo === 'criar_perguntas'
         ? exercicioEditando.conteudo?.respostas
         : exercicioEditando.conteudo?.perguntas
-    setItens((listaBase || []).map((i) => ({ id: i.id || cryptoId(), valor: i.pergunta ?? i.resposta ?? '' })))
+    setItens((listaBase || []).map((i) => ({ id: i.id || cryptoId(), valor: i.pergunta ?? i.resposta ?? '', imagem: i.imagem_url || '' })))
   }, [exercicioEditando])
 
   function limpar() {
     setTipo('perguntas_respostas'); setTitulo(''); setTurmaId(''); setPrazo('')
-    setTexto(''); setItens([{ id: cryptoId(), valor: '' }])
+    setTexto(''); setItens([{ id: cryptoId(), valor: '', imagem: '' }]); setSegundos(15)
   }
 
-  function addItem() { setItens((prev) => [...prev, { id: cryptoId(), valor: '' }]) }
+  function addItem() { setItens((prev) => [...prev, { id: cryptoId(), valor: '', imagem: '' }]) }
+  function atualizarImagem(id, imagem) { setItens((prev) => prev.map((i) => (i.id === id ? { ...i, imagem } : i))) }
+
+  // sugestões de foto (Unsplash, pela função buscar-imagem) a partir da palavra-chave
+  async function sugerirImagens(item) {
+    if (!item.valor.trim()) return
+    const { data, error } = await supabase.functions.invoke('buscar-imagem', { body: { query: item.valor } })
+    if (!error) setBuscaImagem((b) => ({ ...b, [item.id]: data?.resultados || [] }))
+  }
   function atualizarItem(id, valor) { setItens((prev) => prev.map((i) => (i.id === id ? { ...i, valor } : i))) }
   function removerItem(id) { if (itens.length > 1) setItens((prev) => prev.filter((i) => i.id !== id)) }
 
@@ -48,7 +60,7 @@ export function CriarExercicio({ turmas, nivelFixo, licaoFixa, exercicioEditando
     e.preventDefault()
     setMensagem(null)
 
-    const itensLimpos = itens.map((i) => ({ id: i.id, valor: i.valor.trim() })).filter((i) => i.valor)
+    const itensLimpos = itens.map((i) => ({ id: i.id, valor: i.valor.trim(), imagem: (i.imagem || '').trim() })).filter((i) => i.valor || (tipo === 'fluencia' && i.imagem))
     if (itensLimpos.length === 0) {
       setMensagem({ tipo: 'erro', texto: 'Adicione pelo menos um item.' })
       return
@@ -63,6 +75,11 @@ export function CriarExercicio({ turmas, nivelFixo, licaoFixa, exercicioEditando
         return
       }
       conteudo = { texto: texto.trim(), perguntas: itensLimpos.map((i) => ({ id: i.id, pergunta: i.valor })) }
+    } else if (tipo === 'fluencia') {
+      conteudo = {
+        segundos: Math.min(60, Math.max(5, Number(segundos) || 15)),
+        perguntas: itensLimpos.map((i) => ({ id: i.id, pergunta: i.valor, imagem_url: i.imagem || null })),
+      }
     } else {
       conteudo = { perguntas: itensLimpos.map((i) => ({ id: i.id, pergunta: i.valor })) }
     }
@@ -140,16 +157,47 @@ export function CriarExercicio({ turmas, nivelFixo, licaoFixa, exercicioEditando
         </div>
       )}
 
+      {tipo === 'fluencia' && (
+        <div className="bg-paper rounded-xl p-4 space-y-2">
+          <p className="text-sm text-ink">O aluno vê a imagem e/ou a palavra-chave, aperta <strong>Start</strong> e fala uma frase dentro do tempo. O app grava o áudio e transcreve — você ouve na correção.</p>
+          <label className="flex items-center gap-2 text-xs font-medium text-ink-soft uppercase tracking-wide">
+            Tempo por item
+            <input type="number" min="5" max="60" value={segundos} onChange={(e) => setSegundos(e.target.value)}
+              className="w-20 border border-line rounded-lg px-2 py-1.5 text-sm text-ink bg-surface normal-case" /> segundos
+          </label>
+        </div>
+      )}
+
       <div className="space-y-2">
         <label className="block text-xs font-medium text-ink-soft uppercase tracking-wide">
-          {tipo === 'criar_perguntas' ? 'Respostas (o aluno escreve a pergunta)' : 'Perguntas'}
+          {tipo === 'criar_perguntas' ? 'Respostas (o aluno escreve a pergunta)' : tipo === 'fluencia' ? 'Itens (palavra-chave e foto)' : 'Perguntas'}
         </label>
         {itens.map((item, i) => (
           <div key={item.id} className="flex items-center gap-2">
             <span className="text-xs text-ink-faint font-mono w-5">{i + 1}.</span>
-            <input value={item.valor} onChange={(e) => atualizarItem(item.id, e.target.value)}
-              className="flex-1 border border-line rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber"
-              placeholder={tipo === 'criar_perguntas' ? 'Ex: I study English.' : 'Ex: Do you study English?'} />
+            <div className="flex-1 space-y-1.5">
+              <input value={item.valor} onChange={(e) => atualizarItem(item.id, e.target.value)}
+                className="w-full border border-line rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber"
+                placeholder={tipo === 'criar_perguntas' ? 'Ex: I study English.' : tipo === 'fluencia' ? 'Ex: beach / my weekend / coffee' : 'Ex: Do you study English?'} />
+              {tipo === 'fluencia' && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input value={item.imagem} onChange={(e) => atualizarImagem(item.id, e.target.value)}
+                    placeholder="Link da foto (opcional)"
+                    className="flex-1 min-w-[180px] border border-line rounded-lg px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-amber/50" />
+                  <button type="button" onClick={() => sugerirImagens(item)} className="text-xs text-navy underline decoration-amber decoration-2 underline-offset-2">sugerir fotos</button>
+                  {item.imagem && <img src={item.imagem} alt="" className="w-10 h-10 rounded object-cover" />}
+                  {buscaImagem[item.id]?.length > 0 && (
+                    <div className="w-full flex gap-1.5">
+                      {buscaImagem[item.id].map((r, n) => (
+                        <button key={n} type="button" onClick={() => { atualizarImagem(item.id, r.full); setBuscaImagem((b) => ({ ...b, [item.id]: [] })) }}>
+                          <img src={r.thumb} alt={`Sugestão ${n + 1}`} className="w-14 h-14 rounded object-cover hover:ring-2 hover:ring-amber" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             {itens.length > 1 && (
               <button type="button" onClick={() => removerItem(item.id)} className="text-ink-soft hover:text-red-500 transition">×</button>
             )}

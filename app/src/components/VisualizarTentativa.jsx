@@ -1,3 +1,5 @@
+import { AudioResposta } from './AudioResposta'
+
 export function VisualizarTentativa({ exercicio, tentativa }) {
   const itensBase = exercicio.tipo === 'criar_perguntas' ? exercicio.conteudo.respostas : exercicio.conteudo.perguntas
   const corrigida = tentativa.status !== 'pendente'
@@ -18,7 +20,9 @@ export function VisualizarTentativa({ exercicio, tentativa }) {
               <p className="text-xs font-medium text-ink-soft">
                 {i + 1}. {exercicio.tipo === 'criar_perguntas' ? item.resposta : item.pergunta}
               </p>
+              {item.imagem_url && <img src={item.imagem_url} alt="" className="w-full max-h-40 object-cover rounded-lg" />}
               <p className="text-sm text-ink bg-paper rounded px-2 py-1.5">{suaResposta}</p>
+              <AudioResposta caminho={tentativa.resposta?.itens?.find((x) => x.id === item.id)?.audio} />
               {comentario && (
                 <p className="text-xs text-teal bg-teal-soft/50 rounded px-2 py-1.5">{comentario}</p>
               )}
