@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { LivrosGrid, NIVEIS } from './LivrosGrid'
-import { LicoesGrid } from './LicoesGrid'
 import { BlocosLicoesProfessor } from './BlocosLicoesProfessor'
-import { MenuSecoesLicao } from './MenuSecoesLicao'
+import { LicaoCaderno } from './LicaoCaderno'
 import { SelecaoTrilha } from './SelecaoTrilha'
 import { TrilhaEmBreve } from './TrilhaEmBreve'
 import { NavTopo } from './NavTopo'
@@ -21,10 +20,16 @@ export function ConteudoProfessor() {
     setTrilhaSel(null); setNivelSel(null); setBlocoSel(null); setLicaoSel(null); setSecaoSel(null)
   }
 
+  // como no app do aluno: escolher o bloco já abre a 1ª lição dele, com as
+  // 3 lições em abas e os passos da lição (LicaoCaderno, visão do professor)
+  function abrirBloco(bloco) {
+    setBlocoSel(bloco)
+    setLicaoSel(bloco.inicio)
+  }
+
   function voltarUmNivel() {
     if (secaoSel) { setSecaoSel(null); return }
-    if (licaoSel) { setLicaoSel(null); return }
-    if (blocoSel) { setBlocoSel(null); return }
+    if (licaoSel || blocoSel) { setLicaoSel(null); setBlocoSel(null); return }
     if (nivelSel) { setNivelSel(null); return }
     if (trilhaSel) { setTrilhaSel(null); return }
   }
@@ -33,9 +38,9 @@ export function ConteudoProfessor() {
     return <SelecaoTrilha onSelecionar={setTrilhaSel} />
   }
 
-  const titulo = licaoSel
-    ? `${nivelSel} · Lesson ${String(licaoSel).padStart(2, '0')}`
-    : blocoSel
+  const titulo = blocoSel
+    ? `${nivelSel} · Lessons ${String(blocoSel.inicio).padStart(2, '0')}–${String(blocoSel.fim).padStart(2, '0')}`
+    : licaoSel
     ? `${nivelSel} · Block ${blocoSel.numero}`
     : nivelSel || trilhaSel.nome
 
@@ -50,15 +55,11 @@ export function ConteudoProfessor() {
       )}
 
       {nivelSel && !blocoSel && (
-        <BlocosLicoesProfessor nivel={nivelSel} licoes={licoes} onSelecionarBloco={setBlocoSel} />
+        <BlocosLicoesProfessor nivel={nivelSel} licoes={licoes} onSelecionarBloco={abrirBloco} />
       )}
 
-      {blocoSel && !licaoSel && (
-        <LicoesGrid licoes={blocoSel.trio} onSelecionar={setLicaoSel} />
-      )}
-
-      {licaoSel && (
-        <MenuSecoesLicao nivel={nivelSel} licao={licaoSel} audiencia="professor" secaoSel={secaoSel} onSelecionarSecao={setSecaoSel} />
+      {blocoSel && licaoSel && (
+        <LicaoCaderno nivel={nivelSel} trio={blocoSel.trio} licao={licaoSel} onTrocarLicao={setLicaoSel} audiencia="professor" />
       )}
     </div>
   )

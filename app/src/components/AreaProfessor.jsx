@@ -5,13 +5,15 @@ import { MinhasTurmas } from './MinhasTurmas'
 import { ConteudoProfessor } from './ConteudoProfessor'
 import { Configuracoes } from './Configuracoes'
 import { CorrecoesRecentes } from './CorrecoesRecentes'
-import { LogOut, ChevronLeft, BookOpenText, Users, Bell, X, Settings, Camera, Rocket, Sparkles, Flame, Star, ClipboardCheck } from 'lucide-react'
+import { LogOut, ChevronLeft, BookOpenText, Users, Bell, X, Settings, Camera, ClipboardCheck, ArrowRight } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 import logoBranco from '../assets/logo-branco.png'
 
 const CHAVE_ULTIMA_VISTA = 'ff_ultima_notif_vista'
 
 export function AreaProfessor() {
   const { session, signOut } = useAuth()
+  const { tema } = useTheme()
   const [professorId, setProfessorId] = useState(null)
   const [nome, setNome] = useState('')
   const [avatarUrl, setAvatarUrl] = useState(null)
@@ -71,7 +73,8 @@ export function AreaProfessor() {
   const titulo = tela === null ? 'Home' : titulos[tela]
 
   return (
-    <div className="min-h-screen bg-paper">
+    // mesmo visual Caderno do aluno: o tema claro/escuro do professor usa os tokens do aluno
+    <div data-tema={tema === 'escuro' ? 'escuro' : 'claro'} className="min-h-screen bg-paper">
       <header className="bg-navy relative">
         <div className="max-w-2xl mx-auto px-4 py-5 flex justify-between items-center">
           <div>
@@ -122,73 +125,57 @@ export function AreaProfessor() {
         )}
 
         {!carregando && professorId && tela === null && (
-          <div className="space-y-4 animar-entrada">
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-navy to-navy-deep shadow-card p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-white/10 overflow-hidden flex items-center justify-center shrink-0">
-                  {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={16} className="text-white/50" />}
-                </div>
-                <div>
-                  <img src={logoBranco} alt="Fast Fluent" className="h-3.5 w-auto mb-1" />
-                  <h2 className="font-display text-xl font-bold text-white">Hi, {nome || 'teacher'}!</h2>
-                </div>
+          <div className="animar-entrada">
+            <div className="flex justify-between items-start mb-5">
+              <div>
+                <p className="text-sm text-ink-soft">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                <p className="font-display text-3xl font-semibold text-ink mt-1">Hi, {(nome || 'teacher').split(' ')[0]}.</p>
               </div>
-              <p className="text-sm text-white/70 mt-3 mb-4">Choose what you need right now.</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/[0.06] rounded-2xl px-4 py-3">
-                  <p className="text-lg font-bold text-white">{stats.turmas}</p>
-                  <p className="text-[11px] text-white/50">{stats.turmas === 1 ? 'class' : 'classes'}</p>
-                </div>
-                <div className="bg-white/[0.06] rounded-2xl px-4 py-3">
-                  <p className="text-lg font-bold text-amber">{stats.pendentes}</p>
-                  <p className="text-[11px] text-white/50">to grade</p>
-                </div>
-              </div>
+              <button onClick={() => setTela('config')} aria-label="Settings" className="w-11 h-11 rounded-full bg-navy overflow-hidden flex items-center justify-center shrink-0">
+                {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={16} className="text-white/70" />}
+              </button>
             </div>
 
-            <button onClick={() => setTela('conteudo')}
-              className="w-full flex items-center gap-4 bg-surface border border-line rounded-2xl p-5 hover:border-amber/40 hover:shadow-card transition text-left">
-              <div className="w-11 h-11 rounded-xl bg-amber-soft flex items-center justify-center shrink-0">
-                <BookOpenText size={20} className="text-amber" />
-              </div>
-              <div>
-                <p className="font-display text-base font-semibold text-ink">Class Content</p>
-                <p className="text-xs text-ink-soft mt-0.5">All materials, by book and lesson</p>
-              </div>
+            <button onClick={() => setTela(stats.pendentes > 0 ? 'turmas' : 'conteudo')}
+              className="pressionavel relative w-full h-56 rounded-3xl overflow-hidden mb-4 text-left shadow-card block bg-[#0E1733]">
+              <img src="/capas/ignition.png" alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" onError={(e) => { e.target.style.display = 'none' }} />
+              <span className="absolute inset-0 bg-gradient-to-t from-[#0E1733] via-[#0E1733]/40 to-transparent" />
+              <span className="absolute left-5 right-5 bottom-5 flex items-end justify-between gap-3">
+                <span>
+                  <span className="block text-xs font-semibold uppercase tracking-widest text-[#F3D58C]">{stats.pendentes > 0 ? 'To grade' : 'Class content'}</span>
+                  <span className="block font-display text-[26px] leading-tight font-semibold text-white mt-1">
+                    {stats.pendentes > 0 ? `${stats.pendentes} ${stats.pendentes === 1 ? 'answer' : 'answers'} waiting` : 'Plan your next class'}
+                  </span>
+                </span>
+                <span className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center shrink-0">
+                  <ArrowRight size={20} className="text-[#14213D]" />
+                </span>
+              </span>
             </button>
 
-            <button onClick={() => setTela('turmas')}
-              className="w-full flex items-center gap-4 bg-surface border border-line rounded-2xl p-5 hover:border-teal/40 hover:shadow-card transition text-left">
-              <div className="w-11 h-11 rounded-xl bg-teal-soft flex items-center justify-center shrink-0">
-                <Users size={20} className="text-teal" />
-              </div>
-              <div>
-                <p className="font-display text-base font-semibold text-ink">My Classes</p>
-                <p className="text-xs text-ink-soft mt-0.5">Grade homework and check progress</p>
-              </div>
-            </button>
+            <div className="grid grid-cols-4 gap-2.5 mb-6">
+              {[
+                { nome: 'Content', Icone: BookOpenText, ir: 'conteudo' },
+                { nome: 'My classes', Icone: Users, ir: 'turmas' },
+                { nome: 'Graded', Icone: ClipboardCheck, ir: 'correcoes' },
+                { nome: 'Settings', Icone: Settings, ir: 'config' },
+              ].map(({ nome: n, Icone, ir }) => (
+                <button key={ir} onClick={() => setTela(ir)}
+                  className="pressionavel aspect-square rounded-2xl bg-surface shadow-card flex flex-col items-center justify-center gap-2">
+                  <Icone size={24} className="text-ink" />
+                  <span className="text-[12px] font-medium text-ink">{n}</span>
+                </button>
+              ))}
+            </div>
 
-            <button onClick={() => setTela('correcoes')}
-              className="w-full flex items-center gap-4 bg-surface border border-line rounded-2xl p-5 hover:border-teal/40 hover:shadow-card transition text-left">
-              <div className="w-11 h-11 rounded-xl bg-teal-soft flex items-center justify-center shrink-0">
-                <ClipboardCheck size={20} className="text-teal" />
-              </div>
-              <div>
-                <p className="font-display text-base font-semibold text-ink">Recent Corrections</p>
-                <p className="text-xs text-ink-soft mt-0.5">Quickly review what you've graded</p>
-              </div>
-            </button>
-
-            <button onClick={() => setTela('config')}
-              className="w-full flex items-center gap-4 bg-surface border border-line rounded-2xl p-5 hover:border-navy/40 hover:shadow-card transition text-left">
-              <div className="w-11 h-11 rounded-xl bg-paper flex items-center justify-center shrink-0">
-                <Settings size={20} className="text-navy" />
-              </div>
-              <div>
-                <p className="font-display text-base font-semibold text-ink">Settings</p>
-                <p className="text-xs text-ink-soft mt-0.5">Photo, theme and password</p>
-              </div>
-            </button>
+            <div className="flex gap-5 pb-4 border-b border-line">
+              {[[stats.turmas, stats.turmas === 1 ? 'class' : 'classes'], [stats.pendentes, 'to grade'], [naoLidas, 'new updates']].map(([v, r], i) => (
+                <div key={r} className={i ? 'pl-5 border-l border-line' : ''}>
+                  <p className="font-display text-2xl font-semibold text-ink">{v}</p>
+                  <p className="text-xs text-ink-soft">{r}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

@@ -2,33 +2,41 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { blocoParaAluno } from '../lib/material'
 import { ConteudoParte } from './LeitorMaterial'
+import { PYOModal } from './PYOModal'
 import { ListaExercicios } from './ListaExercicios'
 import { Carregando } from './Carregando'
-import { Lock, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Lock, ArrowRight, ArrowLeft, Radio } from 'lucide-react'
 
 // Lição no layout Caderno (temas claro e escuro), na organização do livro do
 // Park: as 3 lições do bloco em abas no topo e, dentro da lição, um PASSO por
 // vez (Structure, cada grupo de palavras novas, Exercises), pra o aluno focar
-// só naquele ponto. Só entra o que é do aluno (lib/material.js).
+// só naquele ponto. Aluno: só o que é dele (lib/material.js) + Exercises.
+// Professor (mesma tela): todos os blocos marcados pra ele, com o PYO.
 
 function pad(n) {
   return String(n).padStart(2, '0')
 }
 
-function montarPassos(material) {
+function blocoParaProfessor(b) {
+  return (b.publicado !== undefined ? b.publicado : true) && !!b.visivel_professor
+}
+
+function montarPassos(material, ehProfessor) {
   const passos = []
-  ;(material?.conteudo?.blocos || []).filter(blocoParaAluno).forEach((bloco) => {
+  ;(material?.conteudo?.blocos || []).filter(ehProfessor ? blocoParaProfessor : blocoParaAluno).forEach((bloco) => {
     if (bloco.tipo === 'vocabulario') {
       ;(bloco.partes || []).forEach((parte) => passos.push({ chave: `${bloco.id}-${parte.nome}`, titulo: parte.nome, parte }))
     } else {
       passos.push({ chave: bloco.id, titulo: bloco.titulo, bloco })
     }
   })
-  passos.push({ chave: 'exercicios', titulo: 'Exercises', exercicios: true })
+  if (!ehProfessor) passos.push({ chave: 'exercicios', titulo: 'Exercises', exercicios: true })
   return passos
 }
 
-export function LicaoCaderno({ nivel, trio, licao, onTrocarLicao, clienteId, abrirExercicios }) {
+export function LicaoCaderno({ nivel, trio, licao, onTrocarLicao, clienteId, abrirExercicios, audiencia = 'aluno' }) {
+  const ehProfessor = audiencia === 'professor'
+  const [mostrarPYO, setMostrarPYO] = useState(false)
   const [material, setMaterial] = useState(null)
   const [carregando, setCarregando] = useState(true)
   const [passoSel, setPassoSel] = useState(0)
@@ -40,13 +48,13 @@ export function LicaoCaderno({ nivel, trio, licao, onTrocarLicao, clienteId, abr
       .then(({ data }) => {
         if (!ativo) return
         setMaterial(data)
-        setPassoSel(abrirExercicios ? montarPassos(data).length - 1 : 0)
+        setPassoSel(abrirExercicios ? montarPassos(data, ehProfessor).length - 1 : 0)
         setCarregando(false)
       })
     return () => { ativo = false }
-  }, [nivel, licao, abrirExercicios])
+  }, [nivel, licao, abrirExercicios, ehProfessor])
 
-  const passos = montarPassos(material)
+  const passos = montarPassos(material, ehProfessor)
   const indice = Math.min(passoSel, passos.length - 1)
   const passo = passos[indice]
   const proximo = passos[indice + 1]
@@ -86,23 +94,33 @@ export function LicaoCaderno({ nivel, trio, licao, onTrocarLicao, clienteId, abr
             ))}
           </nav>
 
-          <section aria-label={passo.titulo} key={passo.chave} className="animar-entrada">
-            <p className="rotulo-aluno mb-1">Step {indice + 1} of {passos.length}</p>
+          {passos.length === 0 && <p className="text-sm text-ink-soft">Nothing published for this lesson yet.</p>}
+
+          {mostrarPYO && passo?.parte && <PYOModal parte={passo.parte} onFechar={() => setMostrarPYO(false)} />}
+
+          {passo && <section aria-label={passo.titulo} key={passo.chave} className="animar-entrada">
+            <p className="rotulo-aluno mb-1">Step {indice + 1} of {passos.length}{ehProfessor && passo.bloco && ['warmup', 'atividades', 'consolidacao', 'outro'].includes(passo.bloco.tipo) ? ' · teacher only' : ''}</p>
             <h2 className="font-display text-2xl font-semibold text-ink mb-4">{passo.titulo}</h2>
 
             {passo.exercicios ? (
               <ListaExercicios clienteId={clienteId} nivel={nivel} licao={licao} />
             ) : (
               <div className="bg-surface rounded-2xl shadow-card p-5">
+                {passo.parte && ehProfessor && passo.parte.frases_repetir?.length > 0 && (
+                  <button onClick={() => setMostrarPYO(true)}
+                    className="mb-4 flex items-center gap-1.5 text-xs font-semibold text-teal bg-teal-soft px-3 py-2 rounded-lg">
+                    <Radio size={13} /> PYO — Practice on Your Own
+                  </button>
+                )}
                 {passo.parte
-                  ? <ConteudoParte parte={passo.parte} audiencia="aluno" />
+                  ? <ConteudoParte parte={passo.parte} audiencia={audiencia} ocultarFrasesInline={ehProfessor} />
                   : <p className="text-[15px] text-ink leading-relaxed whitespace-pre-wrap">{passo.bloco.corpo}</p>}
               </div>
             )}
-          </section>
+          </section>}
 
           <div className="flex items-center gap-3 mt-6">
-            {indice > 0 && (
+            {passo && indice > 0 && (
               <button onClick={() => irPara(indice - 1)}
                 className="h-12 px-4 rounded-full border border-line-strong text-ink text-sm flex items-center gap-1.5">
                 <ArrowLeft size={16} /> Back
