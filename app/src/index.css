@@ -160,3 +160,7 @@ body {
 .selo-comemoracao {
   animation: selo-entrada 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* rótulo pequeno dourado (seções do Caderno) */
+.rotulo-aluno { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-amber); }
+[data-tema="claro"] .rotulo-aluno { color: #8A6A1F; }

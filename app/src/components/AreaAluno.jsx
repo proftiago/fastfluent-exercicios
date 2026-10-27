@@ -16,6 +16,7 @@ import { Carregando } from './Carregando'
 import logoBranco from '../assets/logo-branco.png'
 import { useTemaAluno, temaPadraoPorFaixa } from '../context/TemaAluno'
 import { InicioCaderno, InicioTrilha } from './InicioAluno'
+import { LicaoCaderno } from './LicaoCaderno'
 import { dataLocal } from '../lib/datas'
 
 // Todas as 18 lições de um livro ficam liberadas de uma vez (o aluno pode navegar o
@@ -50,6 +51,7 @@ export function AreaAluno() {
   const [licaoSel, setLicaoSel] = useState(null)
   const [abaLicao, setAbaLicao] = useState('conteudo')
   const [secaoSel, setSecaoSel] = useState(null)
+  const [abrirExercicios, setAbrirExercicios] = useState(false)
 
   useEffect(() => {
     async function carregar() {
@@ -139,7 +141,8 @@ export function AreaAluno() {
 
   const livroEmAndamento = livros.find((l) => l.licaoAtual > 0 && l.licaoAtual < 18) || livros[0]
 
-  function abrirLicao(livro, numero) {
+  function abrirLicao(livro, numero, comExercicios = false) {
+    setAbrirExercicios(comExercicios)
     const indiceBloco = Math.floor((numero - 1) / 3)
     const inicio = indiceBloco * 3
     const licoesDoLivro = montarLicoes(livro)
@@ -178,8 +181,18 @@ export function AreaAluno() {
     resetarNavegacao()
   }
 
+  // Caderno (claro/escuro): escolher um bloco já abre a lição atual dele, com
+  // as 3 lições em abas — não existe mais a tela intermediária de lições.
+  function abrirBloco(bloco) {
+    setBlocoSel(bloco)
+    if (tema === 'kids') return
+    const alvo = bloco.trio.find((l) => l.atual && !l.bloqueada) || bloco.trio.find((l) => !l.bloqueada)
+    if (alvo) { setLicaoSel(alvo.numero); setAbrirExercicios(false); setSecaoSel(null) }
+  }
+
   function voltarUmNivel() {
     if (secaoSel) { setSecaoSel(null); return }
+    if (licaoSel && tema !== 'kids') { setLicaoSel(null); setBlocoSel(null); return }
     if (licaoSel) { setLicaoSel(null); setAbaLicao('conteudo'); return }
     if (blocoSel) { setBlocoSel(null); return }
     if (livroSel) { setLivroSel(null); return }
@@ -197,7 +210,9 @@ export function AreaAluno() {
   const totalLicoes = livros.reduce((soma, l) => soma + l.licoes.length, 0)
   const naTelaInicial = !livroSel && telaAtiva === 'aprender'
 
-  const tituloTopo = licaoSel
+  const tituloTopo = licaoSel && tema !== 'kids'
+    ? `${livroSel?.nivel} · Lessons ${String(blocoSel.inicio).padStart(2, '0')}–${String(blocoSel.fim).padStart(2, '0')}`
+    : licaoSel
     ? `${livroSel?.nivel} · Lesson ${String(licaoSel).padStart(2, '0')}`
     : blocoSel
     ? `${livroSel?.nivel} · ${String(blocoSel.inicio).padStart(2, '0')}–${String(blocoSel.fim).padStart(2, '0')}`
@@ -274,6 +289,9 @@ export function AreaAluno() {
                     const props = {
                       primeiroNome, avatarUrl, streak, xp, totalLicoes, livros, livroEmAndamento, streakEmRisco,
                       onContinuar: continuarDeOndeParei,
+                      onExercicios: () => livroEmAndamento && abrirLicao(livroEmAndamento, livroEmAndamento.licaoAtual, true),
+                      onHistorico: irParaHistorico,
+                      onPerfil: irParaPerfil,
                       onAbrirLivro: setLivroSel,
                       onAbrirLicao: abrirLicao,
                       licoesDoLivro: montarLicoes,
@@ -288,14 +306,20 @@ export function AreaAluno() {
                 <NavTopo onVoltar={voltarUmNivel} onHome={irParaHome} titulo={tituloTopo} />
 
                 {!blocoSel && (
-                  <BlocosLicoes licoes={licoes} onSelecionarBloco={setBlocoSel} />
+                  <BlocosLicoes licoes={licoes} onSelecionarBloco={abrirBloco} />
                 )}
 
                 {blocoSel && !licaoSel && (
                   <LicoesGrid licoes={blocoSel.trio} onSelecionar={selecionarLicao} />
                 )}
 
-                {licaoSel && (
+                {licaoSel && tema !== 'kids' && (
+                  <LicaoCaderno nivel={livroSel.nivel} trio={blocoSel.trio} licao={licaoSel} clienteId={clienteId}
+                    abrirExercicios={abrirExercicios}
+                    onTrocarLicao={(n) => { setLicaoSel(n); setAbrirExercicios(false) }} />
+                )}
+
+                {licaoSel && tema === 'kids' && (
                   <div>
                     <div className="inline-flex bg-paper border border-line rounded-full p-1 mb-5">
                       <button

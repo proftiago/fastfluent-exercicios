@@ -1,4 +1,4 @@
-import { Camera, Flame, Star, Check, Lock, PlayCircle, ArrowRight, Clock, BookOpenText } from 'lucide-react'
+import { Camera, Flame, Star, Check, Lock, PlayCircle, ArrowRight, Clock, BookOpenText, ListChecks, CalendarCheck, UserRound } from 'lucide-react'
 import { LivrosGrid } from './LivrosGrid'
 
 // Tela inicial do aluno em três versões, uma por tema:
@@ -40,8 +40,17 @@ function SeusLivros({ livros, onAbrirLivro, titulo = 'Your books' }) {
   )
 }
 
-export function InicioCaderno({ primeiroNome, avatarUrl, streak, xp, totalLicoes, livros, livroEmAndamento, streakEmRisco, onContinuar, onAbrirLivro }) {
+// Caderno (claro e escuro), na organização do início do Park: saudação,
+// cartão grande com a capa do livro atual pra continuar, atalhos quadrados
+// e a estante de livros.
+export function InicioCaderno({ primeiroNome, avatarUrl, streak, xp, totalLicoes, livros, livroEmAndamento, streakEmRisco, onContinuar, onAbrirLivro, onExercicios, onHistorico, onPerfil }) {
   const hoje = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+  const atalhos = [
+    livroEmAndamento && { nome: 'Exercises', Icone: ListChecks, acao: onExercicios },
+    livroEmAndamento && { nome: 'My book', Icone: BookOpenText, acao: () => onAbrirLivro(livroEmAndamento) },
+    { nome: 'History', Icone: CalendarCheck, acao: onHistorico },
+    { nome: 'Profile', Icone: UserRound, acao: onPerfil },
+  ].filter(Boolean)
   return (
     <>
       <div className="flex justify-between items-start mb-5 animar-entrada">
@@ -49,12 +58,42 @@ export function InicioCaderno({ primeiroNome, avatarUrl, streak, xp, totalLicoes
           <p className="text-sm text-ink-soft">{hoje}</p>
           <p className="font-display text-3xl font-semibold text-ink mt-1">{primeiroNome ? `Hi, ${primeiroNome}.` : 'Hello.'}</p>
         </div>
-        <div className="w-11 h-11 rounded-full bg-navy overflow-hidden flex items-center justify-center shrink-0">
+        <button onClick={onPerfil} aria-label="Profile" className="w-11 h-11 rounded-full bg-navy overflow-hidden flex items-center justify-center shrink-0">
           {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={16} className="text-white/70" />}
-        </div>
+        </button>
       </div>
 
-      <div className="flex gap-5 pb-4 mb-5 border-b border-line animar-entrada">
+      {streakEmRisco && <AvisoStreak streak={streak} />}
+
+      {livroEmAndamento && (
+        <button onClick={onContinuar}
+          className="pressionavel relative w-full h-72 rounded-3xl overflow-hidden mb-4 text-left shadow-card animar-entrada block">
+          <img src={`/capas/${livroEmAndamento.nivel.toLowerCase()}.png`} alt=""
+            className="absolute inset-0 w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none' }} />
+          <span className="absolute inset-0 bg-gradient-to-t from-[#0E1733] via-[#0E1733]/35 to-transparent" />
+          <span className="absolute left-5 right-5 bottom-5 flex items-end justify-between gap-3">
+            <span>
+              <span className="block text-xs font-semibold uppercase tracking-widest text-[#F3D58C]">Continue</span>
+              <span className="block font-display text-[28px] leading-tight font-semibold text-white mt-1">{livroEmAndamento.nivel}<br />Lesson {pad(livroEmAndamento.licaoAtual)}</span>
+            </span>
+            <span className="w-12 h-12 rounded-full bg-white/95 flex items-center justify-center shrink-0">
+              <ArrowRight size={20} className="text-[#14213D]" />
+            </span>
+          </span>
+        </button>
+      )}
+
+      <div className={`grid gap-2.5 mb-6 animar-entrada ${atalhos.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`} role="list">
+        {atalhos.map(({ nome, Icone, acao }) => (
+          <button key={nome} role="listitem" onClick={acao}
+            className="pressionavel aspect-square rounded-2xl bg-surface shadow-card flex flex-col items-center justify-center gap-2">
+            <Icone size={24} className="text-ink" />
+            <span className="text-[12px] font-medium text-ink">{nome}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-5 pb-4 mb-6 border-b border-line animar-entrada">
         {[[streak, 'day streak'], [xp, 'XP'], [totalLicoes, 'lessons']].map(([v, r], i) => (
           <div key={r} className={`${i ? 'pl-5 border-l border-line' : ''}`}>
             <p className="font-display text-2xl font-semibold text-ink">{v}</p>
@@ -62,25 +101,6 @@ export function InicioCaderno({ primeiroNome, avatarUrl, streak, xp, totalLicoes
           </div>
         ))}
       </div>
-
-      {streakEmRisco && <AvisoStreak streak={streak} />}
-
-      {livroEmAndamento && (
-        <div className="mb-7 animar-entrada">
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber mb-3">Pick up where you left off</p>
-          <button onClick={onContinuar}
-            className="pressionavel w-full flex items-center gap-4 bg-surface rounded-2xl px-4 py-4 shadow-card text-left">
-            <span className="w-11 h-11 rounded-full bg-amber-soft flex items-center justify-center shrink-0">
-              <BookOpenText size={20} className="text-amber" />
-            </span>
-            <span className="flex-1 min-w-0">
-              <span className="block font-display text-lg font-semibold text-ink">{livroEmAndamento.nivel} · Lesson {pad(livroEmAndamento.licaoAtual)}</span>
-              <span className="block text-sm text-ink-soft mt-0.5">Content and exercises</span>
-            </span>
-            <ArrowRight size={18} className="text-ink-soft" />
-          </button>
-        </div>
-      )}
 
       <SeusLivros livros={livros} onAbrirLivro={onAbrirLivro} />
     </>
