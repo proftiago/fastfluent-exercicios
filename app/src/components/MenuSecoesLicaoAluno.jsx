@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import { blocoParaAluno } from '../lib/material'
 import { ConteudoParte } from './LeitorMaterial'
 import { Carregando } from './Carregando'
 import { EstadoVazio } from './EstadoVazio'
@@ -31,10 +32,7 @@ export function MenuSecoesLicaoAluno({ nivel, licao, secaoSel, onSelecionarSecao
 
   if (carregando) return <Carregando />
 
-  const blocosVisiveis = (material?.conteudo?.blocos || []).filter((b) => {
-    const publicado = b.publicado !== undefined ? b.publicado : true
-    return publicado && b.visivel_aluno
-  })
+  const blocosVisiveis = (material?.conteudo?.blocos || []).filter(blocoParaAluno)
 
   const itensTopo = []
   const partesVocab = []

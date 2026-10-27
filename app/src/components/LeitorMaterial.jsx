@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { BookOpenText, Volume2, ChevronDown, ChevronUp, Repeat, Sparkles } from 'lucide-react'
 import { EstadoVazio } from './EstadoVazio'
+import { blocoParaAluno } from '../lib/material'
 
 function falar(texto) {
   if (!window.speechSynthesis) return
@@ -123,6 +124,7 @@ export function LeitorMaterial({ nivel, licao, audiencia = 'aluno' }) {
 
   const chaveVisibilidade = audiencia === 'professor' ? 'visivel_professor' : 'visivel_aluno'
   const blocos = (material?.conteudo?.blocos || []).filter((b) => {
+    if (audiencia !== 'professor') return blocoParaAluno(b)
     const publicado = b.publicado !== undefined ? b.publicado : true
     return publicado && b[chaveVisibilidade]
   })

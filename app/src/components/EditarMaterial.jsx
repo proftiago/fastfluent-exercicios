@@ -6,6 +6,7 @@ import {
   BookOpenText, Save, Plus, X, ChevronUp, ChevronDown, Eye, EyeOff,
   GraduationCap, Search, Loader2, Volume2, Check, Bell,
 } from 'lucide-react'
+import { TIPOS_SO_PROFESSOR } from '../lib/material'
 
 const TIPOS_SECAO = [
   { valor: 'warmup', label: 'Warm Up' },
@@ -30,7 +31,8 @@ function novoBloco(tipo = 'warmup') {
     id: novoId(),
     tipo,
     titulo: TIPOS_SECAO.find((t) => t.valor === tipo)?.label || '',
-    visivel_aluno: true,
+    // roteiro do professor nasce escondido do aluno (o app do aluno também filtra)
+    visivel_aluno: !TIPOS_SO_PROFESSOR.includes(tipo),
     visivel_professor: true,
     publicado: true,
     corpo: '',
