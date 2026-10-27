@@ -1,6 +1,6 @@
 // Só em desenvolvimento (npm run dev → /?preview=escuro|claro|kids):
 // mostra a tela inicial de cada tema com dados de exemplo, sem login.
-import { InicioOrbita, InicioCaderno, InicioTrilha } from '../components/InicioAluno'
+import { InicioCaderno, InicioTrilha } from '../components/InicioAluno'
 import { BookOpenText, CalendarCheck, User } from 'lucide-react'
 
 const LIVROS = [
@@ -22,7 +22,7 @@ export function PreviewTemas({ tema }) {
     livros: LIVROS, livroEmAndamento: LIVROS[1], streakEmRisco: tema === 'escuro',
     onContinuar: () => {}, onAbrirLivro: () => {}, onAbrirLicao: () => {}, licoesDoLivro: montarLicoes,
   }
-  const Inicio = tema === 'kids' ? InicioTrilha : tema === 'claro' ? InicioCaderno : InicioOrbita
+  const Inicio = tema === 'kids' ? InicioTrilha : InicioCaderno
   return (
     <div data-tema={tema} className="min-h-screen bg-paper pb-20">
       <header className="bg-navy h-14" />

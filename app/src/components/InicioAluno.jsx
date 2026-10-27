@@ -1,8 +1,8 @@
-import { Camera, Flame, Star, Rocket, Check, Lock, PlayCircle, ArrowRight, Clock, BookOpenText } from 'lucide-react'
-import { LivrosGrid, NIVEIS } from './LivrosGrid'
+import { Camera, Flame, Star, Check, Lock, PlayCircle, ArrowRight, Clock, BookOpenText } from 'lucide-react'
+import { LivrosGrid } from './LivrosGrid'
 
 // Tela inicial do aluno em três versões, uma por tema:
-// escuro = Órbita, claro = Caderno, kids = Trilha.
+// claro e escuro = Caderno (mesma tela, cores diferentes), kids = Trilha.
 // Todas recebem os mesmos dados da AreaAluno.
 
 function pad(n) {
@@ -17,18 +17,6 @@ function livrosParaGrid(livros) {
     progresso: Math.round((l.licaoAtual / 18) * 100),
     _livro: l,
   }))
-}
-
-// Níveis do aluno na ordem do curso + o próximo, ainda trancado.
-function jornada(livros) {
-  const ordem = (n) => { const i = NIVEIS.indexOf(n); return i === -1 ? 99 : i }
-  const meus = [...livros].sort((a, b) => ordem(a.nivel) - ordem(b.nivel))
-  const ultimo = meus.length ? ordem(meus[meus.length - 1].nivel) : -1
-  const proximo = ultimo >= 0 && ultimo < NIVEIS.length - 1 ? NIVEIS[ultimo + 1] : null
-  return [
-    ...meus.map((l) => ({ nivel: l.nivel, livro: l, pct: Math.round((l.licaoAtual / 18) * 100) })),
-    ...(proximo ? [{ nivel: proximo, livro: null, pct: 0 }] : []),
-  ]
 }
 
 function AvisoStreak({ streak }) {
@@ -49,75 +37,6 @@ function SeusLivros({ livros, onAbrirLivro, titulo = 'Your books' }) {
       <h2 className="font-display text-lg font-semibold text-ink mb-3">{titulo}</h2>
       <LivrosGrid livros={livrosParaGrid(livros)} onSelecionar={(l) => onAbrirLivro(l._livro)} />
     </div>
-  )
-}
-
-export function InicioOrbita({ primeiroNome, avatarUrl, streak, livros, livroEmAndamento, streakEmRisco, onContinuar, onAbrirLivro }) {
-  const atual = livroEmAndamento
-  const pct = atual ? Math.round((atual.licaoAtual / 18) * 100) : 0
-  return (
-    <>
-      <div className="flex items-center gap-3 mb-5 animar-entrada">
-        <div className="w-12 h-12 rounded-full bg-surface border-2 border-amber overflow-hidden flex items-center justify-center shrink-0">
-          {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={18} className="text-ink-faint" />}
-        </div>
-        <div>
-          <p className="text-sm text-ink-soft">Welcome back</p>
-          <p className="font-display text-xl font-semibold text-ink">{primeiroNome ? `Hi, ${primeiroNome}!` : 'Hi!'}</p>
-        </div>
-      </div>
-
-      {atual && (
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy to-surface border border-amber/25 p-5 mb-4 animar-entrada">
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber">Continue</p>
-          <div className="flex items-center justify-between gap-4 mt-2">
-            <div>
-              <p className="font-display text-2xl font-bold text-ink leading-tight">{atual.nivel}<br />Lesson {pad(atual.licaoAtual)}</p>
-            </div>
-            <div className="w-20 h-20 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: `conic-gradient(var(--color-amber) 0 ${pct}%, var(--color-line-strong) ${pct}% 100%)` }}>
-              <div className="w-16 h-16 rounded-full bg-surface flex flex-col items-center justify-center">
-                <span className="font-display font-bold text-ink">{atual.licaoAtual}/18</span>
-                <span className="text-[10px] text-ink-soft">lessons</span>
-              </div>
-            </div>
-          </div>
-          <button onClick={onContinuar}
-            className="pressionavel mt-5 w-full h-12 rounded-2xl bg-amber text-paper font-semibold flex items-center justify-center gap-2">
-            Resume lesson <ArrowRight size={18} />
-          </button>
-        </div>
-      )}
-
-      {streakEmRisco && <AvisoStreak streak={streak} />}
-
-      {livros.length > 0 && (
-        <div className="mb-7 animar-entrada">
-          <h2 className="font-display text-lg font-semibold text-ink mb-4">Your journey</h2>
-          <div className="flex items-start justify-around gap-2">
-            {jornada(livros).map((j) => {
-              const feito = j.livro && j.pct >= 100
-              const andando = j.livro && !feito
-              return (
-                <button key={j.nivel} disabled={!j.livro} onClick={() => j.livro && onAbrirLivro(j.livro)}
-                  className="flex flex-col items-center gap-2 w-24 disabled:cursor-default">
-                  <span className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                    feito ? 'bg-amber text-paper'
-                      : andando ? 'bg-navy border-[3px] border-amber text-amber shadow-[0_0_0_8px_var(--color-amber-soft)]'
-                      : 'bg-surface border border-dashed border-line-strong text-ink-faint'}`}>
-                    {feito ? <Check size={24} /> : andando ? <Rocket size={22} className="-rotate-45" /> : <Lock size={20} />}
-                  </span>
-                  <span className={`font-display text-sm font-semibold ${j.livro ? 'text-ink' : 'text-ink-soft'}`}>{j.nivel}</span>
-                  <span className={`text-xs ${andando ? 'text-amber' : 'text-ink-faint'}`}>{feito ? 'Done' : andando ? `${j.pct}%` : 'Next'}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      <SeusLivros livros={livros} onAbrirLivro={onAbrirLivro} />
-    </>
   )
 }
 

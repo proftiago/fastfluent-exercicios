@@ -15,7 +15,7 @@ import { LogOut, BookOpenText, ListChecks, Rocket, Flame, Star, User, CalendarCh
 import { Carregando } from './Carregando'
 import logoBranco from '../assets/logo-branco.png'
 import { useTemaAluno, temaPadraoPorFaixa } from '../context/TemaAluno'
-import { InicioOrbita, InicioCaderno, InicioTrilha } from './InicioAluno'
+import { InicioCaderno, InicioTrilha } from './InicioAluno'
 import { dataLocal } from '../lib/datas'
 
 // Todas as 18 lições de um livro ficam liberadas de uma vez (o aluno pode navegar o
@@ -279,8 +279,7 @@ export function AreaAluno() {
                       licoesDoLivro: montarLicoes,
                     }
                     if (tema === 'kids') return <InicioTrilha {...props} />
-                    if (tema === 'claro') return <InicioCaderno {...props} />
-                    return <InicioOrbita {...props} />
+                    return <InicioCaderno {...props} />
                   })()
             )}
 

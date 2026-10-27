@@ -30,25 +30,27 @@
 }
 /* Temas da área do aluno — aplicados no contêiner da AreaAluno via data-tema,
    pra não mudar a cara da área do professor/autor.
-   escuro = "Órbita" (padrão), claro = "Caderno", kids = "Trilha". */
+   claro e escuro = "Caderno" (mesmo layout, cores de dia/noite), kids = "Trilha". */
 [data-tema="escuro"] {
-  --color-paper: #0A1230;
-  --color-surface: #131C42;
-  --color-ink: #EEF1FA;
-  --color-ink-soft: #A9B3D1;
-  --color-ink-faint: #8C96B8;
-  --color-navy: #1D2A5C;
-  --color-navy-deep: #0E1739;
-  --color-amber: #F2B33D;
-  --color-amber-soft: rgba(242, 179, 61, 0.14);
-  --color-teal: #4FD1B5;
-  --color-teal-soft: rgba(79, 209, 181, 0.14);
-  --color-line: rgba(255, 255, 255, 0.08);
-  --color-line-strong: rgba(255, 255, 255, 0.16);
-  --font-display: "Sora", sans-serif;
+  /* mesmo "Caderno" do tema claro, à noite: azul-marinho profundo no lugar do papel */
+  --color-paper: #0F1526;
+  --color-surface: #172036;
+  --color-ink: #EEF0F5;
+  --color-ink-soft: #A9B0C2;
+  --color-ink-faint: #7F879B;
+  --color-navy: #22305A;
+  --color-navy-deep: #0B1020;
+  --color-amber: #E2B04E;
+  --color-amber-soft: rgba(226, 176, 78, 0.14);
+  --color-teal: #5CC9AF;
+  --color-teal-soft: rgba(92, 201, 175, 0.14);
+  --color-line: #263049;
+  --color-line-strong: #34405C;
+  --font-display: "Fraunces", serif;
   --font-body: "Inter", sans-serif;
 }
 [data-tema="escuro"] .text-navy { color: var(--color-ink); }
+[data-tema="escuro"] .shadow-card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); border: 1px solid var(--color-line); }
 
 [data-tema="claro"] {
   --color-paper: #F6F3EC;
